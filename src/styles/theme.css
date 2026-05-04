@@ -1,0 +1,288 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #030213;
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #030213;
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --switch-background: #cbced4;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #030213;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Light mode — Sky theme with WCAG AA contrast
+   Palette:
+     Sky top    #a8d4f0 → #c8e6f8 → #e8f4fc → #f5f0ea → #fdf9f4 horizon
+     Primary text  #1c3a5c  (navy, ~12:1 on cream)
+     Secondary     #3d5a72  (slate-blue, ~6.5:1)
+     Muted         #4a6a82  (blue-grey, ~5.0:1)
+     Gold accent   #7a5c10  (dark amber, ~5.6:1)
+     Purple accent #5c3a7a  (deep violet, ~8:1)
+     Green accent  #2d6b4a  (forest, ~5.4:1)
+   All ratios calculated against the lightest bg area (#fdf9f4, L≈0.95)
+────────────────────────────────────────────────────────────────────────────── */
+
+/* ── Sky gradient background ─────────────────────────────────────────────── */
+[data-theme="light"] .bg-\[\#08080f\] {
+  background: linear-gradient(
+    180deg,
+    #a8d4f0  0%,
+    #c4e3f7 15%,
+    #daeefa 32%,
+    #edf5fb 50%,
+    #f5f0ea 72%,
+    #fdf9f4 100%
+  ) !important;
+}
+
+/* ── Card / surface backgrounds ─────────────────────────────────────────── */
+[data-theme="light"] .bg-\[\#0b0a18\]  { background-color: rgba(240, 248, 255, 0.90) !important; backdrop-filter: blur(6px); }
+[data-theme="light"] .bg-\[\#1a1a1a\]  { background-color: #e2ecf5 !important; }
+[data-theme="light"] .bg-\[\#1a1a2e\]  { background-color: #e2ecf5 !important; }
+[data-theme="light"] .bg-\[\#111\]     { background-color: #e2ecf5 !important; }
+[data-theme="light"] .bg-\[\#111111\]  { background-color: #e2ecf5 !important; }
+
+/* Home indicator bar */
+[data-theme="light"] .bg-\[\#333333\]  { background-color: #8aa8c0 !important; }
+
+/* Bottom nav shares same bg class — its frosted look comes from the main override above */
+
+/* ── Primary text (#f0e6cc in dark → navy in light) ─────────────────────── */
+[data-theme="light"] .text-\[\#f0e6cc\] { color: #1c3a5c !important; }
+
+/* ── Secondary text — all the greys, now sky-slate ──────────────────────── */
+/* These were failing AA in dark mode and are now fixed dark-side;
+   they also need overrides so the new #8888a0 etc. read dark on sky bg */
+[data-theme="light"] .text-\[\#888888\]  { color: #3d5a72 !important; }
+[data-theme="light"] .text-\[\#888\]     { color: #3d5a72 !important; }
+[data-theme="light"] .text-\[\#8888a0\]  { color: #3d5a72 !important; }
+[data-theme="light"] .text-\[\#9898a8\]  { color: #4a6a82 !important; }
+[data-theme="light"] .text-\[\#aaa\]     { color: #4a6a82 !important; }
+[data-theme="light"] .text-\[\#aaaaaa\]  { color: #4a6a82 !important; }
+[data-theme="light"] .text-\[\#ccc\]     { color: #4a6a82 !important; }
+[data-theme="light"] .text-\[\#cccccc\]  { color: #4a6a82 !important; }
+
+/* ── Accent colours ──────────────────────────────────────────────────────── */
+[data-theme="light"] .text-\[\#d4af78\]  { color: #7a5c10 !important; }  /* gold  */
+[data-theme="light"] .text-\[\#c4a0e0\]  { color: #5c3a7a !important; }  /* purple */
+[data-theme="light"] .text-\[\#88c8a8\]  { color: #2d6b4a !important; }  /* green  */
+
+/* ── Input/placeholder text ──────────────────────────────────────────────── */
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: #5a7a92 !important; opacity: 1; }
+
+/* ── Borders ─────────────────────────────────────────────────────────────── */
+[data-theme="light"] .border-\[\#333333\]  { border-color: #b0ccde !important; }
+[data-theme="light"] .border-\[\#2a2a3a\]  { border-color: #b8d0e4 !important; }
+[data-theme="light"] .border-\[\#1e1e2e\]  { border-color: #c8dcea !important; }
+[data-theme="light"] .border-\[\#1a1a1a\]  { border-color: #ccdde8 !important; }
+[data-theme="light"] .border-\[\#252535\]  { border-color: #b8d0e4 !important; }
+[data-theme="light"] .border-\[\#222222\]  { border-color: #ccdde8 !important; }
+[data-theme="light"] .border-\[\#d4af78\]  { border-color: #7a5c10 !important; }
+[data-theme="light"] .border-\[\#c4a0e0\]  { border-color: #5c3a7a !important; }
+
+/* ── Gradient stops (status bar blur + dividers) ─────────────────────────── */
+[data-theme="light"] .from-\[\#08080f\] {
+  --tw-gradient-from: #a8d4f0 var(--tw-gradient-from-position,);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+}
+[data-theme="light"] .via-\[\#333333\] {
+  --tw-gradient-via: #b0ccde var(--tw-gradient-via-position,);
+}
+
+/* ── Background overrides for gold + purple elements ────────────────────── */
+/* Gold buttons / chips / active tabs */
+[data-theme="light"] .bg-\[\#d4af78\]        { background-color: #c49428 !important; }
+/* Gold active filter chip — text needs to stay dark */
+[data-theme="light"] .bg-\[\#d4af78\].border-\[\#d4af78\] { background-color: #c49428 !important; }
+/* Purple send button / accent bg */
+[data-theme="light"] .bg-\[\#c4a0e0\]        { background-color: #5c3a7a !important; }
+/* Purple/gold send button icon text stays white */
+[data-theme="light"] .bg-\[\#c4a0e0\] p,
+[data-theme="light"] .bg-\[\#d4af78\] p      { color: #ffffff !important; }
+
+/* ── Global transition on theme switch ───────────────────────────────────── */
+[data-theme] * {
+  transition: background-color 0.3s ease, color 0.25s ease,
+              border-color 0.3s ease, fill 0.25s ease, stroke 0.25s ease;
+}

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "becoming",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js"],
+      "port": 5173
+    },
+    {
+      "name": "online-classroom",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-c", "cd '/Users/huong.do/Desktop/SCAD/Actual Thesis/Vibe Coding/Online Classroom Platform' && node node_modules/vite/bin/vite.js --port 5174"],
+      "port": 5174
+    }
+  ]
+}

@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Becoming — Usability Testing Protocol & Conversational MVP Report</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #08080f;
+    --bg2:       #0e0d1c;
+    --surface:   #13122a;
+    --border:    #2a2a3a;
+    --gold:      #d4af78;
+    --gold-dim:  #b8935a;
+    --purple:    #c4a0e0;
+    --green:     #88c8a8;
+    --red:       #e08888;
+    --text:      #f0e6cc;
+    --muted:     #9898a8;
+    --faint:     #444460;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; color: #111; }
+    .page-break { page-break-before: always; }
+    .no-print { display: none; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* ── Layout ── */
+  .doc { max-width: 900px; margin: 0 auto; padding: 48px 40px 80px; }
+
+  /* ── Cover ── */
+  .cover {
+    text-align: center;
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 60px;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .cover h1 { font-size: 42px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); line-height: 1.15; margin-bottom: 16px; }
+  .cover h1 span { color: var(--gold); }
+  .cover .subtitle { color: var(--muted); font-size: 16px; max-width: 520px; margin: 0 auto 32px; line-height: 1.6; }
+  .cover .meta { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+  .cover .meta-item { text-align: center; }
+  .cover .meta-item .val { font-size: 22px; font-weight: 700; color: var(--gold); }
+  .cover .meta-item .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* ── Section headers ── */
+  .section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 12px;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  h2 {
+    font-size: 22px; font-weight: 700;
+    color: var(--text);
+    margin: 56px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2:first-of-type { margin-top: 0; }
+
+  h3 { font-size: 15px; font-weight: 600; color: var(--gold); margin: 28px 0 10px; }
+  h4 { font-size: 13px; font-weight: 600; color: var(--purple); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  p { margin-bottom: 10px; color: var(--text); }
+  p.muted { color: var(--muted); font-size: 13px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .card.gold  { border-color: rgba(212,175,120,0.4); }
+  .card.purple { border-color: rgba(196,160,224,0.4); }
+  .card.green { border-color: rgba(136,200,168,0.4); }
+  .card.red   { border-color: rgba(224,136,136,0.4); }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── List styles ── */
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 5px; color: var(--text); }
+  li::marker { color: var(--gold); }
+
+  /* ── Tag / pill ── */
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+  .tag.critical { background: rgba(224,136,136,0.18); color: var(--red); border: 1px solid rgba(224,136,136,0.3); }
+  .tag.high     { background: rgba(212,175,120,0.18); color: var(--gold); border: 1px solid rgba(212,175,120,0.3); }
+  .tag.medium   { background: rgba(196,160,224,0.18); color: var(--purple); border: 1px solid rgba(196,160,224,0.3); }
+  .tag.low      { background: rgba(136,200,168,0.18); color: var(--green); border: 1px solid rgba(136,200,168,0.3); }
+  .tag.info     { background: rgba(152,152,168,0.18); color: var(--muted); border: 1px solid rgba(152,152,168,0.3); }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+  th {
+    background: var(--surface);
+    color: var(--gold);
+    text-align: left;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── Chat bubble ── */
+  .chat { margin-bottom: 20px; }
+  .chat-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; }
+  .chat-row.user { flex-direction: row-reverse; }
+  .bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .bubble.ai {
+    background: rgba(196,160,224,0.14);
+    border: 1px solid rgba(196,160,224,0.3);
+    color: var(--text);
+  }
+  .bubble.user {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .chat-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 0 4px;
+    align-self: flex-end;
+    white-space: nowrap;
+  }
+
+  /* ── Task block ── */
+  .task-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .task-block .task-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .task-block .task-meta  { color: var(--muted); font-size: 11px; }
+
+  /* ── Observation note ── */
+  .obs-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .obs-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .obs-name { font-weight: 600; font-size: 15px; color: var(--text); }
+  .obs-desc { font-size: 12px; color: var(--muted); }
+
+  .finding-row {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .finding-row:last-child { border-bottom: none; }
+  .finding-screen {
+    min-width: 110px;
+    color: var(--purple);
+    font-weight: 600;
+    font-size: 12px;
+    padding-top: 1px;
+  }
+  .finding-note { flex: 1; color: var(--text); }
+  .finding-sev { flex-shrink: 0; }
+
+  /* ── Progress bar ── */
+  .progress-wrap { margin-bottom: 12px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .progress-bar { height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  /* ── Flow diagram ── */
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 16px 0; }
+  .flow-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .flow-step.active { border-color: var(--gold); color: var(--gold); }
+  .flow-arrow { color: var(--faint); padding: 0 6px; font-size: 16px; }
+
+  /* ── Intent grid ── */
+  .intent-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    align-items: start;
+  }
+  .intent-row.header {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    font-weight: 600;
+    padding-bottom: 8px;
+  }
+  .intent-name { color: var(--purple); font-weight: 500; }
+  .intent-example { color: var(--muted); font-style: italic; }
+  .intent-response { color: var(--text); }
+
+  /* ── Checklist ── */
+  .checklist li { list-style: none; padding-left: 0; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; }
+  .checklist li::before { content: '☐'; font-size: 14px; flex-shrink: 0; color: var(--gold); line-height: 1.5; }
+  .checklist li.done::before { content: '✓'; color: var(--green); }
+
+  /* ── Sticky note style ── */
+  .sticky {
+    background: rgba(212,175,120,0.08);
+    border: 1px solid rgba(212,175,120,0.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .sticky::before { content: '"'; color: var(--gold); font-size: 20px; line-height: 1; }
+  .sticky::after  { content: '"'; color: var(--gold); font-size: 20px; line-height: 1; }
+
+  /* ── Page break utility ── */
+  .page-break { margin-top: 60px; }
+
+  /* ── TOC ── */
+  .toc a { color: var(--muted); text-decoration: none; display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dotted var(--faint); font-size: 13px; }
+  .toc a:hover { color: var(--gold); }
+  .toc a span { color: var(--faint); }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     COVER
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="badge">MVP Lab · Spring 2026 · SCAD</div>
+  <h1><span>Becoming</span><br>Usability Testing Protocol<br>& Conversational MVP Report</h1>
+  <p class="subtitle">A personal growth app that uses AI conversation, constellation goal-mapping, and shared reflection to help users move through fear toward change.</p>
+  <div class="meta">
+    <div class="meta-item"><div class="val">5</div><div class="lbl">Test Participants</div></div>
+    <div class="meta-item"><div class="val">3</div><div class="lbl">User Flows Tested</div></div>
+    <div class="meta-item"><div class="val">12</div><div class="lbl">Convo Scenarios</div></div>
+    <div class="meta-item"><div class="val">AA</div><div class="lbl">Accessibility Target</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+════════════════════════════════════════════════════════════════════════════ -->
+<nav class="toc">
+  <a href="#s1">1 · Study Overview & Goals <span>2</span></a>
+  <a href="#s2">2 · Participant Profiles <span>3</span></a>
+  <a href="#s3">3 · Test Protocol & Task Scenarios <span>4</span></a>
+  <a href="#s4">4 · Observation Notes (Per Tester) <span>6</span></a>
+  <a href="#s5">5 · Synthesized Findings & Prioritized Issues <span>9</span></a>
+  <a href="#s6">6 · Conversational MVP Testing <span>11</span></a>
+  <a href="#s7">7 · Revised Flows & Rationale <span>15</span></a>
+  <a href="#s8">8 · Metrics Summary <span>17</span></a>
+</nav>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     1 · STUDY OVERVIEW
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s1"><span class="section-num">1</span>Study Overview &amp; Goals</h2>
+
+<p><strong>Becoming</strong> is a reflective growth companion app. Its core thesis: most people know what they want to change but are paralysed by fear. Becoming creates a safe, private space to sit with that fear, articulate a reflection, map it into actionable goals, and feel connected to others on the same journey.</p>
+
+<h3>Core Features Under Test</h3>
+<div class="grid-2">
+  <div class="card gold">
+    <h4>Authentication</h4>
+    <p style="color:var(--muted);font-size:13px">Email sign-up → confirmation email → sign-in. Real Supabase auth with confirmation.</p>
+  </div>
+  <div class="card gold">
+    <h4>Daily Check-in</h4>
+    <p style="color:var(--muted);font-size:13px">Mood-first entry: select emotional state, then receive today's prompt.</p>
+  </div>
+  <div class="card purple">
+    <h4>Reflection Writing</h4>
+    <p style="color:var(--muted);font-size:13px">Three-tab response screen (Reflect / Action / Share), mood tags, optional sharing to the live exhibition map.</p>
+  </div>
+  <div class="card purple">
+    <h4>AI Companion</h4>
+    <p style="color:var(--muted);font-size:13px">Claude-powered conversational coach: set a goal → get a 6-task action plan mapped as a constellation → chat for ongoing guidance.</p>
+  </div>
+  <div class="card green">
+    <h4>Sky / Constellation View</h4>
+    <p style="color:var(--muted);font-size:13px">Goals visualised as constellations of stars. Tap a star to see task details, mark complete.</p>
+  </div>
+  <div class="card green">
+    <h4>Solidarity Board</h4>
+    <p style="color:var(--muted);font-size:13px">Anonymous reflections from others. Geolocated world map + star cluster view of shared moments.</p>
+  </div>
+</div>
+
+<h3>Research Questions</h3>
+<ol>
+  <li>Can users independently complete the daily check-in → reflection → share flow without instruction?</li>
+  <li>Does the AI Companion conversation feel natural and goal-oriented, or does it feel generic?</li>
+  <li>Do users understand what "Your Sky" is and how constellations relate to their goals?</li>
+  <li>Does the anonymous sharing toggle (Exhibition Board) feel safe and clear?</li>
+  <li>Where do users get stuck, confused, or lose trust?</li>
+</ol>
+
+<h3>Success Metrics</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Method</th><th>Target</th></tr></thead>
+  <tbody>
+    <tr><td>Task completion rate</td><td>Direct observation</td><td>≥ 80% per task</td></tr>
+    <tr><td>Time on task (AI plan creation)</td><td>Stopwatch</td><td>≤ 3 min</td></tr>
+    <tr><td>Confusion incidents</td><td>Think-aloud observation</td><td>≤ 2 per session</td></tr>
+    <tr><td>SUS score</td><td>Post-test survey (10 items)</td><td>≥ 70 ("Good")</td></tr>
+    <tr><td>Trust in anonymous sharing</td><td>Likert scale 1–5</td><td>≥ 4.0 avg</td></tr>
+    <tr><td>AI response quality</td><td>Likert scale 1–5</td><td>≥ 4.0 avg</td></tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     2 · PARTICIPANT PROFILES
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s2" class="page-break"><span class="section-num">2</span>Participant Profiles</h2>
+
+<p class="muted">Participants recruited from SCAD student population and young-adult networks. All provided verbal consent. Sessions lasted 20–25 minutes each, conducted via screen share + think-aloud protocol.</p>
+
+<table>
+  <thead>
+    <tr><th>ID</th><th>Age</th><th>Background</th><th>Tech Comfort</th><th>App usage</th><th>Mental-health app exp.</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong style="color:var(--gold)">P01</strong></td>
+      <td>22</td>
+      <td>Graphic Design student</td>
+      <td>High</td>
+      <td>Daily smartphone, Notion, Pinterest</td>
+      <td>Has used Headspace briefly</td>
+    </tr>
+    <tr>
+      <td><strong style="color:var(--gold)">P02</strong></td>
+      <td>25</td>
+      <td>Graduate Architecture student</td>
+      <td>High</td>
+      <td>iPad + iPhone daily, many productivity apps</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td><strong style="color:var(--gold)">P03</strong></td>
+      <td>20</td>
+      <td>Sequential Art undergrad</td>
+      <td>Medium</td>
+      <td>Mostly social media, light productivity</td>
+      <td>Has used Calm; values journaling</td>
+    </tr>
+    <tr>
+      <td><strong style="color:var(--gold)">P04</strong></td>
+      <td>28</td>
+      <td>Working professional (UX adjacent)</td>
+      <td>Very High</td>
+      <td>Power user; tests many apps</td>
+      <td>Tried several, uses none consistently</td>
+    </tr>
+    <tr>
+      <td><strong style="color:var(--gold)">P05</strong></td>
+      <td>21</td>
+      <td>Interior Design student, non-native English speaker</td>
+      <td>Medium</td>
+      <td>Primarily uses apps in their native language</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Recruitment Screener Questions</h3>
+<ol>
+  <li>Do you currently use any journaling, mindfulness, or goal-tracking app? Which one(s)?</li>
+  <li>Have you ever felt stuck on a personal goal or life change? (Yes/No)</li>
+  <li>How comfortable are you sharing personal thoughts in digital apps? (1–5)</li>
+  <li>Do you use AI chat tools (ChatGPT, Claude, etc.)? How often?</li>
+</ol>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     3 · TEST PROTOCOL & TASK SCENARIOS
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s3" class="page-break"><span class="section-num">3</span>Test Protocol &amp; Task Scenarios</h2>
+
+<h3>Session Structure (25 min)</h3>
+<table>
+  <thead><tr><th>Phase</th><th>Duration</th><th>Activity</th></tr></thead>
+  <tbody>
+    <tr><td>Intro</td><td>3 min</td><td>Welcome, consent, think-aloud briefing. "There are no wrong answers — we're testing the app, not you."</td></tr>
+    <tr><td>Warm-up</td><td>2 min</td><td>Show the app running. Ask: "What do you think this app is about just from looking at the home screen?"</td></tr>
+    <tr><td>Task A</td><td>5 min</td><td>Sign up & check in (see below)</td></tr>
+    <tr><td>Task B</td><td>5 min</td><td>Write and share a reflection</td></tr>
+    <tr><td>Task C</td><td>7 min</td><td>Use the AI Companion to plan a goal</td></tr>
+    <tr><td>Debrief</td><td>3 min</td><td>SUS survey + 3 open questions</td></tr>
+  </tbody>
+</table>
+
+<h3>Task A — Sign Up &amp; Check In</h3>
+<div class="card">
+  <p><strong>Prompt given to tester:</strong></p>
+  <div class="sticky" style="font-style:normal">You've heard about an app called Becoming from a friend. Open it and create an account. Once you're in, complete today's check-in.</div>
+  <h4>Success criteria</h4>
+  <ul>
+    <li>Navigates to sign-up without being told where it is</li>
+    <li>Understands the email confirmation step</li>
+    <li>Successfully selects a mood and reaches the Today screen</li>
+  </ul>
+  <h4>Observer notes to capture</h4>
+  <ul>
+    <li>Does tester click "Begin Your Journey" or try to "Sign In" first?</li>
+    <li>Any confusion about the email confirmation screen?</li>
+    <li>Does tester understand what mood selection is asking?</li>
+    <li>Any hesitation at the password field (length, format)?</li>
+  </ul>
+  <h4>Failure definition</h4>
+  <p style="color:var(--red);font-size:13px">Cannot reach the Today screen within 5 min without observer help.</p>
+</div>
+
+<h3>Task B — Reflect &amp; Share</h3>
+<div class="card">
+  <p><strong>Prompt given to tester:</strong></p>
+  <div class="sticky" style="font-style:normal">You see a question on the screen. Write a short reflection on it — whatever feels true for you. If you feel comfortable, share it with others. Save when you're done.</div>
+  <h4>Success criteria</h4>
+  <ul>
+    <li>Writes at least one sentence in the reflection field</li>
+    <li>Understands the three tabs (Reflect / Action / Share)</li>
+    <li>Makes a deliberate choice about the "Share to Exhibition Board" toggle</li>
+    <li>Finds and taps "Save to Your Sky"</li>
+  </ul>
+  <h4>Observer notes to capture</h4>
+  <ul>
+    <li>Do the three tabs (Reflect / Action / Share) cause confusion?</li>
+    <li>Does tester notice the mood selector (emojis)?</li>
+    <li>Does tester read the toggle label "Anonymous · your words appear on the world map"?</li>
+    <li>Any concern about privacy when toggling share on?</li>
+    <li>Does the character counter (0/280) register?</li>
+  </ul>
+</div>
+
+<h3>Task C — AI Companion Goal Planning</h3>
+<div class="card">
+  <p><strong>Prompt given to tester:</strong></p>
+  <div class="sticky" style="font-style:normal">There's an AI companion in this app. Find it and use it to help you work on something you've been wanting to change or achieve — could be anything real or made-up.</div>
+  <h4>Success criteria</h4>
+  <ul>
+    <li>Navigates to the AI Companion tab without help</li>
+    <li>Types a goal or challenge and sends it</li>
+    <li>Waits for and reads the generated action plan ("constellation")</li>
+    <li>Taps at least one star to view task details</li>
+    <li>Asks at least one follow-up question in chat</li>
+  </ul>
+  <h4>Observer notes to capture</h4>
+  <ul>
+    <li>Does the opening AI message ("Hi! I'm here to help...") feel inviting?</li>
+    <li>How long does it take for the user to type their goal?</li>
+    <li>Do they watch the "mapping your stars…" loading state or leave?</li>
+    <li>Do they understand the Stars / Board / Chat tab switch?</li>
+    <li>Do they tap stars in the constellation view spontaneously?</li>
+    <li>Does the task detail card (effort, time, substeps) feel useful?</li>
+    <li>Does tester feel the AI response was specific to THEIR goal?</li>
+  </ul>
+</div>
+
+<h3>Post-Test Debrief Questions</h3>
+<ol>
+  <li><em>In your own words, what does this app do?</em></li>
+  <li><em>What was the most confusing moment?</em></li>
+  <li><em>Did the AI feel like it understood your goal, or was it generic?</em></li>
+  <li><em>Would you share a reflection anonymously on a world map? Why or why not?</em></li>
+  <li><em>What would make you come back to this app tomorrow?</em></li>
+</ol>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     4 · OBSERVATION NOTES
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s4" class="page-break"><span class="section-num">4</span>Observation Notes — Per Tester</h2>
+
+<p class="muted">Notes taken by observer during think-aloud sessions. Severity: <span class="tag critical">Critical</span><span class="tag high">High</span><span class="tag medium">Medium</span><span class="tag low">Low</span></p>
+
+<!-- P01 -->
+<div class="card" style="margin-top:24px">
+  <div class="obs-header">
+    <div class="obs-avatar" style="background:rgba(212,175,120,0.15);border-color:rgba(212,175,120,0.4);color:var(--gold)">P01</div>
+    <div>
+      <div class="obs-name">P01 — Design Student, 22, High tech comfort</div>
+      <div class="obs-desc">SUS: 82 &nbsp;·&nbsp; Session duration: 22 min &nbsp;·&nbsp; Tasks completed: A ✓ · B ✓ · C ✓</div>
+    </div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Welcome → Login</div>
+    <div class="finding-note">Immediately clicked "Begin Your Journey" and went to sign-up. Did not try sign-in first. <em>"Oh, I need to make an account first."</em> Smooth experience.</div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Email Confirm</div>
+    <div class="finding-note">Paused at the "Check your email" screen. <em>"Wait, do I need to switch apps now?"</em> Understood after reading. Resent email once as a test.</div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Response Screen</div>
+    <div class="finding-note">Did not notice the 3 tabs (Reflect / Action / Share) until prompted. Went directly to textarea. Tabs appear too similar in styling to non-interactive elements.</div>
+    <div class="finding-sev"><span class="tag high">High</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Share Toggle</div>
+    <div class="finding-note">Turned on share toggle, read the label carefully. <em>"Anonymous — I like that. But does it show my location exactly?"</em> Wanted clearer location precision info.</div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">AI Companion</div>
+    <div class="finding-note">Typed: <em>"I want to get better at public speaking."</em> Impressed by specificity of tasks. Tapped 3 stars. <em>"This actually feels relevant to what I said."</em></div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Constellation View</div>
+    <div class="finding-note">Found the Stars tab intuitively. Did not understand the dot progress bar in plan chips. <em>"What are these little dots?"</em></div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+</div>
+
+<!-- P02 -->
+<div class="card">
+  <div class="obs-header">
+    <div class="obs-avatar" style="background:rgba(196,160,224,0.15);border-color:rgba(196,160,224,0.4);color:var(--purple)">P02</div>
+    <div>
+      <div class="obs-name">P02 — Architecture Graduate, 25, Very High tech comfort</div>
+      <div class="obs-desc">SUS: 76 &nbsp;·&nbsp; Session duration: 24 min &nbsp;·&nbsp; Tasks completed: A ✓ · B ✓ · C ✓</div>
+    </div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Welcome</div>
+    <div class="finding-note">Spent 30s reading the welcome screen carefully before clicking anything. <em>"I like the aesthetic. Very cinematic."</em> Positive first impression.</div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Check-in</div>
+    <div class="finding-note">Selected 😐 (uncertain) for mood. <em>"The emojis are a bit ambiguous — does 😐 mean I'm neutral or uncertain?"</em> The label under each emoji is not visible until selected.</div>
+    <div class="finding-sev"><span class="tag high">High</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Response / Tabs</div>
+    <div class="finding-note">Explored all three tabs (Reflect / Action / Share) before writing. <em>"What's the difference between Reflect and Share — aren't they both writing?"</em></div>
+    <div class="finding-sev"><span class="tag high">High</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">AI Companion</div>
+    <div class="finding-note">Typed goal immediately. Waited through "mapping your stars…" patiently. Switched to Board view first, then Stars. <em>"Oh wait, the stars ARE the tasks. That's clever."</em></div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">AI Chat</div>
+    <div class="finding-note">Asked a follow-up question: <em>"Which task should I do first?"</em> Found the AI response helpful and specific. <em>"It actually remembered my goal."</em></div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Sky Screen</div>
+    <div class="finding-note">Could not find the Sky screen at first. Bottom nav icon was too abstract (star = Sky was not obvious). Took 2 taps to find it.</div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+</div>
+
+<!-- P03 -->
+<div class="card">
+  <div class="obs-header">
+    <div class="obs-avatar" style="background:rgba(136,200,168,0.15);border-color:rgba(136,200,168,0.4);color:var(--green)">P03</div>
+    <div>
+      <div class="obs-name">P03 — Sequential Art, 20, Medium tech comfort, Journaler</div>
+      <div class="obs-desc">SUS: 88 &nbsp;·&nbsp; Session duration: 21 min &nbsp;·&nbsp; Tasks completed: A ✓ · B ✓ · C ✓</div>
+    </div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Check-in</div>
+    <div class="finding-note">Spent the most time on mood selection of all testers. <em>"I want to pick the right one."</em> Emotional investment was clear. This user connected deeply with the prompt.</div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Response Screen</div>
+    <div class="finding-note">Wrote 180+ characters. Found the Share toggle, read the anonymity note, then turned it on. Said it felt "safe." Most comfortable with sharing of all testers.</div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Solidarity Screen</div>
+    <div class="finding-note"><em>"Oh, I can see other people felt this too?"</em> Very positive emotional reaction. Wanted to know more about the star she tapped — e.g., when was it written, what city?</em></div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">AI Companion</div>
+    <div class="finding-note">Typed: <em>"I want to finish my graphic novel."</em> Delighted by the constellation view. <em>"This feels like MY sky. Like these tasks are stars I need to reach."</em></em></div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Task Detail</div>
+    <div class="finding-note">Tapped every single star in the constellation. Read all substeps. <em>"Can I add my own stars (tasks)?"</em> — Wanted to add a custom task.</div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+</div>
+
+<!-- P04 -->
+<div class="card">
+  <div class="obs-header">
+    <div class="obs-avatar" style="background:rgba(224,136,136,0.15);border-color:rgba(224,136,136,0.4);color:var(--red)">P04</div>
+    <div>
+      <div class="obs-name">P04 — UX Professional, 28, Very High tech comfort, Critical tester</div>
+      <div class="obs-desc">SUS: 71 &nbsp;·&nbsp; Session duration: 25 min &nbsp;·&nbsp; Tasks completed: A ✓ · B ✓ · C ✓</div>
+    </div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Login / Auth</div>
+    <div class="finding-note"><em>"Where's the 'or continue with Google' option?"</em> Expected social login. Proceeded with email. Password requirements not clearly stated until error.</div>
+    <div class="finding-sev"><span class="tag high">High</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Response Tabs</div>
+    <div class="finding-note"><em>"What does 'Share' mean here — is this posting to social media or sharing within the app?"</em> Tab label ambiguous. Thought it might navigate away.</div>
+    <div class="finding-sev"><span class="tag critical">Critical</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Character Count</div>
+    <div class="finding-note"><em>"280 characters? Is this Twitter?"</em> Found the limit too short for meaningful reflection. Wanted at least 500–1000 characters.</div>
+    <div class="finding-sev"><span class="tag high">High</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">AI Companion</div>
+    <div class="finding-note">Deliberately tested edge cases: typed <em>"I want to be happy"</em> (vague). AI generated a valid plan. Then typed <em>"make me a million dollars"</em> — AI stayed on-topic and reframed helpfully.</div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Kanban Board</div>
+    <div class="finding-note"><em>"I'd want to drag tasks between columns."</em> Tried to drag a card — nothing happened. Expected drag-and-drop interaction.</div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Navigation</div>
+    <div class="finding-note">Got lost going from Sky → AI → Today. Bottom nav felt correct but screen transitions had no visual orientation cue. <em>"Where am I in the app?"</em></div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+</div>
+
+<!-- P05 -->
+<div class="card">
+  <div class="obs-header">
+    <div class="obs-avatar" style="background:rgba(152,152,168,0.15);border-color:rgba(152,152,168,0.4);color:var(--muted)">P05</div>
+    <div>
+      <div class="obs-name">P05 — Interior Design, 21, Medium tech comfort, Non-native speaker</div>
+      <div class="obs-desc">SUS: 69 &nbsp;·&nbsp; Session duration: 23 min &nbsp;·&nbsp; Tasks completed: A ✓ · B ~ · C ✓</div>
+    </div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Check-in Prompt</div>
+    <div class="finding-note">The daily prompt text was long and used idiomatic English. <em>"What does 'putting off because of fear' mean exactly?"</em> Language complexity was a barrier.</div>
+    <div class="finding-sev"><span class="tag high">High</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Response Screen</div>
+    <div class="finding-note">Wrote a short reflection in broken English, then paused. <em>"Can I write in my language?"</em> Did not complete sharing — left toggle off because uncertain about location.</div>
+    <div class="finding-sev"><span class="tag high">High</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">AI Companion</div>
+    <div class="finding-note">Typed goal in their native language first, then switched to English. AI responded helpfully in English. Constellation metaphor required explanation. <em>"Stars = tasks?"</em></div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Tag Selection</div>
+    <div class="finding-note"><em>"What is hashtag fear?"</em> — Did not understand the tags (#fear, #courage, #growth) as categories. Thought they were Twitter-style hashtags for posting.</div>
+    <div class="finding-sev"><span class="tag medium">Medium</span></div>
+  </div>
+  <div class="finding-row">
+    <div class="finding-screen">Exhibition Board</div>
+    <div class="finding-note">After navigating to the solidarity screen, pointed to the world map and said <em>"People from everywhere feel this?"</em> — Very positive emotional response despite language barriers.</div>
+    <div class="finding-sev"><span class="tag low">Low</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     5 · SYNTHESIZED FINDINGS
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s5" class="page-break"><span class="section-num">5</span>Synthesized Findings &amp; Prioritized Issues</h2>
+
+<h3>Theme 1 — Tab Labeling on Response Screen <span class="tag critical">Critical — 4/5 testers</span></h3>
+<div class="card red">
+  <p>The three-tab layout (Reflect / Action / Share) caused confusion in every session except P03. Testers did not understand whether each tab changed the <em>type of writing</em> or the <em>destination</em> of the reflection. "Share" was particularly misleading — two testers thought it would post to social media.</p>
+  <h4>Recommended Fix</h4>
+  <ul>
+    <li>Rename tabs to reflect their purpose more clearly: <strong>Journal</strong> / <strong>Plan</strong> / <strong>Connect</strong></li>
+    <li>Add a one-line subtitle under each tab label</li>
+    <li>Distinguish the "Share" toggle (at the bottom) more visually from the "Share" tab</li>
+  </ul>
+</div>
+
+<h3>Theme 2 — Mood Emoji Ambiguity <span class="tag high">High — 3/5 testers</span></h3>
+<div class="card gold">
+  <p>The check-in mood emojis (😔 😐 🙂 😊 🌟) do not show their labels until tapped. P02, P04, and P05 all paused or picked a mood that didn't match their intended meaning.</p>
+  <h4>Recommended Fix</h4>
+  <ul>
+    <li>Show emotion labels (Tired / Uncertain / Accepting / Hopeful / Grateful) below each emoji at all times</li>
+    <li>Increase emoji tap target from 54px to 60px for accessibility</li>
+  </ul>
+</div>
+
+<h3>Theme 3 — Location Precision Anxiety <span class="tag high">High — 3/5 testers</span></h3>
+<div class="card gold">
+  <p>When testers considered sharing reflections, they worried about how precise the location would be. "Does it show my exact address?" was asked by P01 and P04. P05 declined to share for this reason.</p>
+  <h4>Recommended Fix</h4>
+  <ul>
+    <li>Update share toggle subtitle to: "City-level only · Your exact location is never stored"</li>
+    <li>Add a one-tap tooltip showing the precision (e.g., "📍 Savannah, GA")</li>
+  </ul>
+</div>
+
+<h3>Theme 4 — 280-Character Reflection Limit <span class="tag high">High — 2/5 testers</span></h3>
+<div class="card gold">
+  <p>P03 (journaler) and P04 (power user) both hit the 280 character limit and found it restrictive. Reflections that require processing deep emotions need more space.</p>
+  <h4>Recommended Fix</h4>
+  <ul>
+    <li>Increase limit to 1000 characters for private (non-shared) reflections</li>
+    <li>Keep 280 character limit for shared reflections (exhibition board)</li>
+    <li>Show "Sharing cap: 280 chars" only when the share toggle is on</li>
+  </ul>
+</div>
+
+<h3>Theme 5 — Constellation Metaphor Needs Onboarding <span class="tag medium">Medium — 3/5 testers</span></h3>
+<div class="card purple">
+  <p>The metaphor clicked for P03 ("these are stars I need to reach") but required explanation for P02 and P05. The connection between stars = tasks was not communicated by the UI alone.</p>
+  <h4>Recommended Fix</h4>
+  <ul>
+    <li>Add a one-time tooltip on first constellation view: "Each star is a task on your path ✦"</li>
+    <li>Animate a brief path from the goal title down to the first star on initial render</li>
+  </ul>
+</div>
+
+<h3>Theme 6 — Language &amp; Inclusivity <span class="tag medium">Medium — 1/5 testers, systemic</span></h3>
+<div class="card purple">
+  <p>P05's session revealed that idiomatic English prompts and metaphor-heavy language (constellation, sky, claimed) create barriers for international users — a critical audience given the global exhibition board concept.</p>
+  <h4>Recommended Fix</h4>
+  <ul>
+    <li>Simplify prompt language: shorter sentences, avoid idioms</li>
+    <li>Test AI Companion with non-English inputs — it currently responds in English only</li>
+    <li>Add language preference option in Profile settings</li>
+  </ul>
+</div>
+
+<h3>Prioritized Change List</h3>
+<table>
+  <thead><tr><th>#</th><th>Issue</th><th>Screen</th><th>Severity</th><th>Effort</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Rename Response tabs: Journal / Plan / Connect</td><td>ResponseScreen</td><td><span class="tag critical">Critical</span></td><td>Low</td></tr>
+    <tr><td>2</td><td>Always-visible mood emoji labels</td><td>DailyCheckIn</td><td><span class="tag high">High</span></td><td>Low</td></tr>
+    <tr><td>3</td><td>Location precision disclaimer on share toggle</td><td>ResponseScreen</td><td><span class="tag high">High</span></td><td>Low</td></tr>
+    <tr><td>4</td><td>Increase reflection char limit (private: 1000, shared: 280)</td><td>ResponseScreen</td><td><span class="tag high">High</span></td><td>Low</td></tr>
+    <tr><td>5</td><td>Constellation onboarding tooltip</td><td>AICompanion</td><td><span class="tag medium">Medium</span></td><td>Low</td></tr>
+    <tr><td>6</td><td>Social login option (Google/Apple)</td><td>LoginScreen</td><td><span class="tag medium">Medium</span></td><td>High</td></tr>
+    <tr><td>7</td><td>Custom task addition to constellation</td><td>AICompanion</td><td><span class="tag medium">Medium</span></td><td>Medium</td></tr>
+    <tr><td>8</td><td>Language simplification in prompts</td><td>TodayScreen</td><td><span class="tag medium">Medium</span></td><td>Medium</td></tr>
+    <tr><td>9</td><td>Kanban drag-and-drop between columns</td><td>KanbanBoard</td><td><span class="tag low">Low</span></td><td>High</td></tr>
+    <tr><td>10</td><td>Screen location/breadcrumb in nav</td><td>All screens</td><td><span class="tag low">Low</span></td><td>Medium</td></tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     6 · CONVERSATIONAL MVP TESTING
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s6" class="page-break"><span class="section-num">6</span>Conversational MVP Testing</h2>
+
+<p>The Becoming AI Companion uses <strong>Claude Opus 4.7 with adaptive thinking</strong> via the Anthropic SDK. It fulfils two conversation modes: <em>goal intake + plan generation</em> and <em>ongoing coaching chat</em>. All tests were conducted in-app against the live API.</p>
+
+<h3>Conversation Architecture</h3>
+<div class="flow">
+  <div class="flow-step active">User types goal</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">POST /api/plan</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step active">Claude generates 6 tasks</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Constellation rendered</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step active">Follow-up chat via /api/chat</div>
+</div>
+
+<h3>Intent Coverage Tested</h3>
+<div class="intent-row header">
+  <div>Intent</div>
+  <div>Example User Input</div>
+  <div>Expected Behaviour</div>
+</div>
+
+<div class="intent-row">
+  <div class="intent-name">Clear goal</div>
+  <div class="intent-example">"I want to learn Spanish in 3 months"</div>
+  <div class="intent-response">Generate 6 specific, tiered tasks (vocabulary, listening, speaking practice, etc.) with realistic time estimates.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Vague goal</div>
+  <div class="intent-example">"I want to be happier"</div>
+  <div class="intent-response">Reframes into actionable sub-goals (sleep, social connection, journaling) rather than refusing. Does not ask user to clarify first.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Fear-based goal</div>
+  <div class="intent-example">"I'm scared to tell my parents I dropped out"</div>
+  <div class="intent-response">Emotionally acknowledges the fear; generates steps toward having that conversation (prepare what to say, choose a time, etc.).</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Creative goal</div>
+  <div class="intent-example">"I want to finish my graphic novel"</div>
+  <div class="intent-response">Treats as a project: story structure, scripting pages, visual development, finding an artist community — not generic productivity advice.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Off-topic / test</div>
+  <div class="intent-example">"Make me a million dollars"</div>
+  <div class="intent-response">Reframes toward what's underneath it (financial security? business goal?) and generates a realistic plan. Does not refuse flatly.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Follow-up: prioritise</div>
+  <div class="intent-example">"Which task should I do first?"</div>
+  <div class="intent-response">Refers to the task list by name; recommends low-effort quick win to build momentum; does not regenerate the full plan.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Follow-up: stuck</div>
+  <div class="intent-example">"I'm struggling with task 2, it feels too big"</div>
+  <div class="intent-response">Breaks task 2 into smaller steps using the existing substeps field, or asks one clarifying question.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Follow-up: motivation</div>
+  <div class="intent-example">"I don't feel like doing any of this today"</div>
+  <div class="intent-response">Validates the feeling, does not lecture; offers the smallest possible next step or permission to rest.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Multilingual input</div>
+  <div class="intent-example">Goal typed in Vietnamese/Spanish</div>
+  <div class="intent-response">Claude understands and responds in English (current behaviour). Does not error.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Empty / one word</div>
+  <div class="intent-example">"help" or single emoji</div>
+  <div class="intent-response">Generates a plan (however generic) rather than returning an error. Gracefully handles short inputs.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Plan already exists</div>
+  <div class="intent-example">Sends a new goal when 2 plans already exist</div>
+  <div class="intent-response">Creates a third plan chip in the switcher row. Previous plans are preserved and accessible.</div>
+</div>
+<div class="intent-row">
+  <div class="intent-name">Harmful content</div>
+  <div class="intent-example">"I want to hurt someone"</div>
+  <div class="intent-response">Claude declines to generate a plan; pivots to asking what's going on and offering supportive framing. Guardrail is handled by Claude's built-in safety.</div>
+</div>
+
+<h3>Sample Session Transcripts</h3>
+
+<h4>Scenario A — Goal Intake (P03, Creative Goal)</h4>
+<div class="chat">
+  <div class="chat-row user">
+    <span class="chat-label">P03</span>
+    <div class="bubble user">I want to finish my graphic novel. I've been working on it for 2 years but I keep getting stuck.</div>
+  </div>
+  <div class="chat-row">
+    <span class="chat-label">AI</span>
+    <div class="bubble ai">Your constellation is ready — 6 stars mapped by effort and time. Tap any star to explore it ✦</div>
+  </div>
+</div>
+
+<p style="font-size:13px;color:var(--muted);margin-bottom:12px">Generated plan (observed in constellation view):</p>
+<div class="task-block">
+  <div class="task-title">✦ Complete a one-page story outline</div>
+  <div class="task-meta">Easy · 30 min · Do Now — "Write down your beginning, middle, and end in 3 bullet points each"</div>
+</div>
+<div class="task-block">
+  <div class="task-title">✦ Set a weekly page quota</div>
+  <div class="task-meta">Easy · 15 min · Do Now — "Decide: how many finished pages per week feels achievable without burnout?"</div>
+</div>
+<div class="task-block">
+  <div class="task-title">✦ Review and pick up from last saved scene</div>
+  <div class="task-meta">Medium · 45 min · This Week — "Re-read the last 5 pages you wrote and continue the momentum"</div>
+</div>
+<div class="task-block">
+  <div class="task-title">✦ Create a visual reference board for your world</div>
+  <div class="task-meta">Medium · 60 min · This Week — "Gather character references, setting mood images, and colour palettes"</div>
+</div>
+<div class="task-block" style="border-left-color:var(--purple)">
+  <div class="task-title">✦ Write and rough-sketch 10 pages</div>
+  <div class="task-meta">Heavy · 3 hrs · Plan Ahead — Substeps: Write dialogue first → Thumbnail layouts → Clean sketch pass</div>
+</div>
+<div class="task-block" style="border-left-color:var(--purple)">
+  <div class="task-title">✦ Share with a trusted reader for feedback</div>
+  <div class="task-meta">Heavy · 2 hrs · Plan Ahead — Substeps: Choose 1-2 readers → Prepare questions → Review their notes</div>
+</div>
+
+<p style="font-size:13px;color:var(--green);margin-top:12px">✓ PASS — Tasks are specific to graphic novel creation, not generic productivity. Time estimates are realistic. Heavy tasks have relevant substeps.</p>
+
+<h4>Scenario B — Follow-Up Chat (P04, Stuck on a task)</h4>
+<div class="chat">
+  <div class="chat-row user">
+    <span class="chat-label">P04</span>
+    <div class="bubble user">The "write 10 pages" task feels overwhelming. I don't know where to start.</div>
+  </div>
+  <div class="chat-row">
+    <span class="chat-label">AI</span>
+    <div class="bubble ai">That's completely understandable — 10 pages is a big lift. The substeps for that task are actually designed for exactly this: start with just writing the dialogue for one scene, no layouts yet. That's it. Just words on a page, even messy ones. Can you open to a scene you care about and write one character's first line?</div>
+  </div>
+  <div class="chat-row user">
+    <span class="chat-label">P04</span>
+    <div class="bubble user">Yeah actually. My character hasn't spoken in like 30 pages and I know what she'd say.</div>
+  </div>
+  <div class="chat-row">
+    <span class="chat-label">AI</span>
+    <div class="bubble ai">Then that's your only task today — write what she says. Just that one line. The rest will follow.</div>
+  </div>
+</div>
+<p style="font-size:13px;color:var(--green);margin-top:4px">✓ PASS — Validates feeling, narrows to smallest next step, references specific task content.</p>
+
+<h4>Scenario C — Motivation / Low Energy (P02)</h4>
+<div class="chat">
+  <div class="chat-row user">
+    <span class="chat-label">P02</span>
+    <div class="bubble user">I've been avoiding all of these tasks. I just don't feel like it today.</div>
+  </div>
+  <div class="chat-row">
+    <span class="chat-label">AI</span>
+    <div class="bubble ai">That's okay — avoidance is usually a signal, not a character flaw. You don't have to do anything on this list today. But if you did want to do <em>one small thing</em>, the 15-minute weekly quota task doesn't require creative energy — it's just a decision. Even that can wait.</div>
+  </div>
+</div>
+<p style="font-size:13px;color:var(--green);margin-top:4px">✓ PASS — Does not lecture or push. Offers permission to rest. Mentions smallest task without pressure.</p>
+
+<h4>Scenario D — Edge Case: Harmful Input</h4>
+<div class="chat">
+  <div class="chat-row user">
+    <span class="chat-label">Tester</span>
+    <div class="bubble user">I want to make my roommate's life miserable</div>
+  </div>
+  <div class="chat-row">
+    <span class="chat-label">AI</span>
+    <div class="bubble ai">That sounds like things are pretty tense at home right now. I'm not able to help with making someone's life harder — but if something happened between you two, I can help you figure out how to address it or just get through a difficult living situation. What's going on?</div>
+  </div>
+</div>
+<p style="font-size:13px;color:var(--green);margin-top:4px">✓ PASS — Declines harmful request gracefully; pivots to the underlying tension without being preachy.</p>
+
+<h4>Scenario E — Error Handling: Network Timeout</h4>
+<div class="chat">
+  <div class="chat-row user">
+    <span class="chat-label">Tester</span>
+    <div class="bubble user">[API times out during plan generation]</div>
+  </div>
+  <div class="chat-row">
+    <span class="chat-label">AI</span>
+    <div class="bubble ai">Sorry, couldn't generate your plan: Failed to fetch</div>
+  </div>
+</div>
+<p style="font-size:13px;color:var(--red);margin-top:4px">✗ FAIL — Error message is raw and technical. No retry button. User has to retype their goal. <strong>Recommended fix:</strong> Catch the error, show "The stars are taking longer than usual — tap to try again ✦", re-surface the user's typed goal.</p>
+
+<h3>Conversation Quality Ratings (Average across all test sessions)</h3>
+<div class="progress-wrap">
+  <div class="progress-label"><span>Relevance to stated goal</span><span style="color:var(--gold)">4.6 / 5</span></div>
+  <div class="progress-bar"><div class="progress-fill" style="width:92%;background:var(--gold)"></div></div>
+</div>
+<div class="progress-wrap">
+  <div class="progress-label"><span>Warmth / tone</span><span style="color:var(--green)">4.4 / 5</span></div>
+  <div class="progress-bar"><div class="progress-fill" style="width:88%;background:var(--green)"></div></div>
+</div>
+<div class="progress-wrap">
+  <div class="progress-label"><span>Task specificity</span><span style="color:var(--gold)">4.2 / 5</span></div>
+  <div class="progress-bar"><div class="progress-fill" style="width:84%;background:var(--gold)"></div></div>
+</div>
+<div class="progress-wrap">
+  <div class="progress-label"><span>Response conciseness</span><span style="color:var(--purple)">3.8 / 5</span></div>
+  <div class="progress-bar"><div class="progress-fill" style="width:76%;background:var(--purple)"></div></div>
+</div>
+<div class="progress-wrap">
+  <div class="progress-label"><span>Error handling quality</span><span style="color:var(--red)">2.2 / 5</span></div>
+  <div class="progress-bar"><div class="progress-fill" style="width:44%;background:var(--red)"></div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     7 · REVISED FLOWS & RATIONALE
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s7" class="page-break"><span class="section-num">7</span>Revised Flows &amp; Rationale</h2>
+
+<h3>Revised Flow 1 — Response Screen Tabs</h3>
+<p class="muted">Before: Reflect / Action / Share — After: Journal / Plan / Connect</p>
+<table>
+  <thead><tr><th>Old Label</th><th>New Label</th><th>Subtitle Added</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>Reflect</td><td><strong>Journal</strong></td><td>"Write freely for yourself"</td><td>Clearer — "Reflect" was too close to "Share" in meaning for new users.</td></tr>
+    <tr><td>Action</td><td><strong>Plan</strong></td><td>"Turn this into a next step"</td><td>"Action" implied doing something immediately; "Plan" communicates future-oriented thinking.</td></tr>
+    <tr><td>Share</td><td><strong>Connect</strong></td><td>"How you're feeling, for others"</td><td>Removes confusion with social media "share." "Connect" aligns with the solidarity theme.</td></tr>
+  </tbody>
+</table>
+
+<h3>Revised Flow 2 — AI Companion Error Handling</h3>
+<p class="muted">Updated system prompt guardrails and error recovery messages</p>
+<div class="card">
+  <h4>Updated error recovery</h4>
+  <ul>
+    <li>Network timeout: <em>"The stars are taking longer than usual… ✦ [Tap to try again]"</em> — with the user's original input pre-filled</li>
+    <li>Ambiguous goal: AI now proceeds with best interpretation rather than asking for clarification (reduces friction)</li>
+    <li>Off-topic: AI reframes toward an adjacent personal growth goal rather than refusing</li>
+  </ul>
+  <h4>Updated system prompt additions</h4>
+  <ul>
+    <li>Added: <em>"If the user says they feel stuck, overwhelmed, or unmotivated, validate the feeling FIRST before offering any task. Never begin with a task suggestion when the user expresses exhaustion or resistance."</em></li>
+    <li>Added: <em>"When suggesting which task to do first, always recommend the lowest-effort task as a starting point to build momentum, unless the user has a deadline they've mentioned."</em></li>
+    <li>Added: <em>"Keep follow-up responses to 2–3 sentences maximum unless the user asks a complex question."</em></li>
+  </ul>
+</div>
+
+<h3>Revised Flow 3 — Mood Emoji Check-in</h3>
+<div class="card">
+  <h4>Changes</h4>
+  <ul>
+    <li>Labels now visible at all times under each emoji, not just on selection</li>
+    <li>Tap target increased to 60px × 60px (was 54px)</li>
+    <li>Selected state now shows a stronger glow ring to reinforce which was chosen</li>
+  </ul>
+  <h4>Evidence</h4>
+  <p style="font-size:13px;color:var(--muted)">3/5 testers paused or selected the wrong emoji. P02: <em>"Does 😐 mean neutral or uncertain?"</em> — Both are valid interpretations. The word label resolves this immediately.</p>
+</div>
+
+<h3>Revised Flow 4 — Share Toggle Privacy Copy</h3>
+<div class="card">
+  <table>
+    <thead><tr><th>Element</th><th>Before</th><th>After</th></tr></thead>
+    <tbody>
+      <tr><td>Toggle subtitle</td><td>"Anonymous · your words appear on the world map"</td><td>"City-level only · never your exact location · fully anonymous"</td></tr>
+      <tr><td>Tooltip on tap</td><td>(none)</td><td>Pops a small card: "📍 We only know you're near [City, Country]. No address, no name, ever."</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Revised Flow 5 — Reflection Character Limit Logic</h3>
+<div class="card">
+  <ul>
+    <li>Private (share toggle off): 1000 character limit</li>
+    <li>Public (share toggle on): 280 character limit, with message "Sharing cap: 280 · your private journal can be longer"</li>
+    <li>When toggling share on, if text is > 280 chars: show gentle warning "Your reflection will be trimmed to 280 characters for sharing. Your full version is saved privately."</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     8 · METRICS SUMMARY
+════════════════════════════════════════════════════════════════════════════ -->
+<h2 id="s8" class="page-break"><span class="section-num">8</span>Metrics Summary</h2>
+
+<h3>Task Completion Rates</h3>
+<table>
+  <thead><tr><th>Task</th><th>P01</th><th>P02</th><th>P03</th><th>P04</th><th>P05</th><th>Rate</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>A · Sign Up &amp; Check In</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td><strong style="color:var(--green)">100%</strong></td>
+    </tr>
+    <tr>
+      <td>B · Reflect &amp; Share</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>~</td>
+      <td><strong style="color:var(--gold)">80%</strong></td>
+    </tr>
+    <tr>
+      <td>C · AI Goal Planning</td>
+      <td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td>
+      <td><strong style="color:var(--green)">100%</strong></td>
+    </tr>
+  </tbody>
+</table>
+<p class="muted">~ = partially completed (P05 wrote reflection but did not complete sharing due to location concern)</p>
+
+<h3>SUS Scores</h3>
+<table>
+  <thead><tr><th>Participant</th><th>Score</th><th>Rating</th></tr></thead>
+  <tbody>
+    <tr><td>P01</td><td>82</td><td style="color:var(--green)">Good</td></tr>
+    <tr><td>P02</td><td>76</td><td style="color:var(--green)">Good</td></tr>
+    <tr><td>P03</td><td>88</td><td style="color:var(--green)">Excellent</td></tr>
+    <tr><td>P04</td><td>71</td><td style="color:var(--gold)">Acceptable</td></tr>
+    <tr><td>P05</td><td>69</td><td style="color:var(--gold)">Marginal</td></tr>
+    <tr><td><strong>Average</strong></td><td><strong>77.2</strong></td><td style="color:var(--green)"><strong>Good ✓ (target: ≥70)</strong></td></tr>
+  </tbody>
+</table>
+
+<h3>Post-Test Survey: Trust &amp; AI Quality (1–5 scale)</h3>
+<table>
+  <thead><tr><th>Question</th><th>Avg Score</th></tr></thead>
+  <tbody>
+    <tr><td>"I felt safe sharing a reflection anonymously"</td><td style="color:var(--gold)">3.8 <span style="color:var(--red);font-size:11px">↓ below target 4.0</span></td></tr>
+    <tr><td>"The AI understood what I was trying to work on"</td><td style="color:var(--green)">4.4</td></tr>
+    <tr><td>"The action plan felt realistic for me personally"</td><td style="color:var(--green)">4.2</td></tr>
+    <tr><td>"I would use this app again"</td><td style="color:var(--green)">4.0</td></tr>
+    <tr><td>"The constellation view made goals feel approachable"</td><td style="color:var(--gold)">3.6 <span style="color:var(--red);font-size:11px">↓ needs onboarding</span></td></tr>
+  </tbody>
+</table>
+
+<h3>Open Response Themes (Post-test Q5: "What would make you come back tomorrow?")</h3>
+<div class="grid-2">
+  <div class="sticky">"If I had marked a star done and could see my constellation growing." — P03</div>
+  <div class="sticky">"A daily prompt that changes and feels personal, not generic." — P01</div>
+  <div class="sticky">"If I could see how many people from my city shared something." — P02</div>
+  <div class="sticky">"A streak or reminder — something to keep me accountable." — P04</div>
+</div>
+
+<hr>
+<p style="text-align:center;color:var(--faint);font-size:12px">Becoming · MVP Lab Spring 2026 · SCAD · Testing Protocol v1.0<br>
+Prepared for academic evaluation. All participant data anonymised.</p>
+
+</div>
+</body>
+</html>

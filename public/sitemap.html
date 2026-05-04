@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Site Map Reference — Duolingo & Khan Academy</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #09090f;
+    color: #e8e4dc;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 48px 40px 80px;
+  }
+
+  h1.page-title {
+    font-size: 13px;
+    letter-spacing: .35em;
+    text-transform: uppercase;
+    color: #444;
+    margin-bottom: 6px;
+    font-weight: 400;
+  }
+  p.page-sub {
+    font-size: 11px;
+    color: #2a2a3a;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    margin-bottom: 52px;
+  }
+
+  .maps-row {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .map-section {
+    flex: 1;
+    min-width: 520px;
+  }
+
+  .map-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid #111118;
+    padding-bottom: 16px;
+  }
+  .map-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -.3px;
+  }
+  .map-tagline {
+    font-size: 11px;
+    color: #333;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #555;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  svg.sitemap {
+    display: block;
+    overflow: visible;
+  }
+
+  /* node boxes */
+  .node-rect {
+    rx: 7;
+    filter: url(#glow);
+  }
+  .node-text {
+    font-family: 'Inter', system-ui, sans-serif;
+    dominant-baseline: middle;
+    text-anchor: middle;
+    font-weight: 600;
+    pointer-events: none;
+    letter-spacing: -.1px;
+  }
+  .node-sub {
+    font-family: 'Inter', system-ui, sans-serif;
+    dominant-baseline: middle;
+    text-anchor: middle;
+    font-weight: 400;
+    pointer-events: none;
+    fill: rgba(255,255,255,0.55);
+    letter-spacing: -.05px;
+  }
+  .conn {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  @media (max-width: 1140px) {
+    .maps-row { flex-direction: column; }
+    .map-section { min-width: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Site Map Reference</h1>
+<p class="page-sub">Information Architecture · Duolingo &amp; Khan Academy</p>
+
+<div class="maps-row">
+
+  <!-- ─── DUOLINGO ─────────────────────────────────────────────────────── -->
+  <div class="map-section">
+    <div class="map-header">
+      <span class="map-title" style="color:#58cc02;">Duolingo</span>
+      <span class="map-tagline">Language Learning · Gamified</span>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#58cc02;"></div> Root</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1cb0f6;"></div> Main Sections</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ce82ff;"></div> Features</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9600;"></div> Sub-features</div>
+    </div>
+
+    <svg id="duo-svg" class="sitemap" width="580" height="680"></svg>
+  </div>
+
+  <!-- ─── KHAN ACADEMY ─────────────────────────────────────────────────── -->
+  <div class="map-section">
+    <div class="map-header">
+      <span class="map-title" style="color:#1865f2;">Khan Academy</span>
+      <span class="map-tagline">Education Platform · Mastery-Based</span>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#1865f2;"></div> Root</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#14bf96;"></div> Main Sections</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9059ff;"></div> Features</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff8c00;"></div> Sub-features</div>
+    </div>
+
+    <svg id="khan-svg" class="sitemap" width="580" height="720"></svg>
+  </div>
+
+</div>
+
+<script>
+// ─── Drawing utilities ────────────────────────────────────────────────────────
+
+const NS = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function addDefs(svg, glowColor) {
+  const defs = svgEl('defs', {});
+
+  // Glow filter
+  const filter = svgEl('filter', { id: `glow-${svg.id}`, x: '-30%', y: '-30%', width: '160%', height: '160%' });
+  const fe1 = svgEl('feGaussianBlur', { stdDeviation: '3', result: 'blur' });
+  const fe2 = svgEl('feMerge', {});
+  const mn1 = svgEl('feMergeNode', { in: 'blur' });
+  const mn2 = svgEl('feMergeNode', { in: 'SourceGraphic' });
+  fe2.appendChild(mn1); fe2.appendChild(mn2);
+  filter.appendChild(fe1); filter.appendChild(fe2);
+  defs.appendChild(filter);
+
+  svg.appendChild(defs);
+}
+
+// Draw a rounded-rect node
+function drawNode(svg, x, y, w, h, label, sublabel, fillColor, textSize = 11) {
+  const g = svgEl('g', {});
+
+  // Shadow
+  const shadow = svgEl('rect', {
+    x: x + 2, y: y + 2, width: w, height: h, rx: 7,
+    fill: 'rgba(0,0,0,0.35)',
+  });
+  g.appendChild(shadow);
+
+  // Main rect
+  const rect = svgEl('rect', {
+    x, y, width: w, height: h, rx: 7,
+    fill: fillColor + 'ee',
+    stroke: fillColor,
+    'stroke-width': '1',
+    'stroke-opacity': '0.4',
+  });
+  g.appendChild(rect);
+
+  // Label
+  const cy = sublabel ? y + h * 0.38 : y + h * 0.5;
+  const text = svgEl('text', {
+    x: x + w / 2,
+    y: cy,
+    fill: '#fff',
+    'font-size': textSize,
+    'font-family': 'Inter, system-ui, sans-serif',
+    'font-weight': '600',
+    'text-anchor': 'middle',
+    'dominant-baseline': 'middle',
+    'letter-spacing': '-.1',
+  });
+  text.textContent = label;
+  g.appendChild(text);
+
+  if (sublabel) {
+    const sub = svgEl('text', {
+      x: x + w / 2,
+      y: y + h * 0.68,
+      fill: 'rgba(255,255,255,0.5)',
+      'font-size': textSize - 2,
+      'font-family': 'Inter, system-ui, sans-serif',
+      'font-weight': '400',
+      'text-anchor': 'middle',
+      'dominant-baseline': 'middle',
+    });
+    sub.textContent = sublabel;
+    g.appendChild(sub);
+  }
+
+  svg.appendChild(g);
+  return { cx: x + w / 2, cy: y + h / 2, rx: x + w, ly: y + h / 2 };
+}
+
+// Bezier curve from right edge of parent to left edge of child
+function drawConn(svg, x1, y1, x2, y2, color, opacity = 0.35, width = 1.5) {
+  const mx = (x1 + x2) / 2;
+  const path = svgEl('path', {
+    d: `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`,
+    fill: 'none',
+    stroke: color,
+    'stroke-width': width,
+    'stroke-opacity': opacity,
+    'stroke-linecap': 'round',
+  });
+  svg.insertBefore(path, svg.firstChild); // draw connections behind nodes
+  return path;
+}
+
+// ─── DUOLINGO DATA ────────────────────────────────────────────────────────────
+
+function buildDuolingo(svg) {
+  addDefs(svg, '#58cc02');
+
+  const ROOT_W = 112, ROOT_H = 44;
+  const L1_W = 120, L1_H = 36;
+  const L2_W = 128, L2_H = 30;
+  const L3_W = 122, L3_H = 26;
+
+  const C0 = 10;       // root x
+  const C1 = 170;      // section x
+  const C2 = 345;      // feature x
+  const C3 = 522;      // sub-feature x (optional)
+
+  const sections = [
+    { label: 'Onboarding', y: 52,  children: [
+      { label: 'Sign Up', y: 30 },
+      { label: 'Log In',  y: 64 },
+      { label: 'Choose Language', y: 98 },
+      { label: 'Set Daily Goal', y: 132 },
+    ]},
+    { label: 'Learn',       y: 200, children: [
+      { label: 'Daily Path',  y: 178, sub3: [{ label: 'Lessons', y: 162 }, { label: 'Stories', y: 192 }, { label: 'XP Chest', y: 222 }] },
+      { label: 'Podcasts',   y: 218 },
+      { label: 'Grammar Tips', y: 252 },
+    ]},
+    { label: 'Practice',    y: 336, children: [
+      { label: 'Review Round', y: 310 },
+      { label: 'Speaking',     y: 344 },
+      { label: 'Listening',    y: 378 },
+      { label: 'Mini-games',   y: 412 },
+    ]},
+    { label: 'Social',      y: 472, children: [
+      { label: 'Friends',    y: 448 },
+      { label: 'Leagues',    y: 482 },
+      { label: 'Challenges', y: 516 },
+    ]},
+    { label: 'Profile',     y: 570, children: [
+      { label: 'Stats & Streaks', y: 549 },
+      { label: 'Achievements',    y: 583 },
+      { label: 'Settings',        y: 617 },
+    ]},
+    { label: 'Shop',        y: 650, children: [
+      { label: 'Gem Store',        y: 632 },
+      { label: 'Super Duolingo',   y: 660 },
+    ]},
+  ];
+
+  // Root
+  const root = drawNode(svg, C0, 318, ROOT_W, ROOT_H, 'Duolingo', 'Language Learning', '#58cc02', 12);
+
+  sections.forEach(sec => {
+    const sNode = drawNode(svg, C1, sec.y - L1_H / 2, L1_W, L1_H, sec.label, null, '#1cb0f6', 11);
+    drawConn(svg, C0 + ROOT_W, 318 + ROOT_H / 2, C1, sec.y, '#1cb0f6', 0.4, 1.5);
+
+    sec.children.forEach(child => {
+      const cNode = drawNode(svg, C2, child.y - L2_H / 2, L2_W, L2_H, child.label, null, '#ce82ff', 10);
+      drawConn(svg, C1 + L1_W, sec.y, C2, child.y, '#ce82ff', 0.35, 1.2);
+
+      if (child.sub3) {
+        child.sub3.forEach(s3 => {
+          drawNode(svg, C3, s3.y - L3_H / 2, L3_W, L3_H, s3.label, null, '#ff9600', 9.5);
+          drawConn(svg, C2 + L2_W, child.y, C3, s3.y, '#ff9600', 0.4, 1);
+        });
+      }
+    });
+  });
+}
+
+// ─── KHAN ACADEMY DATA ───────────────────────────────────────────────────────
+
+function buildKhan(svg) {
+  addDefs(svg, '#1865f2');
+
+  const ROOT_W = 120, ROOT_H = 44;
+  const L1_W = 128, L1_H = 36;
+  const L2_W = 130, L2_H = 30;
+  const L3_W = 118, L3_H = 26;
+
+  const C0 = 10;
+  const C1 = 182;
+  const C2 = 362;
+  const C3 = 534;
+
+  const sections = [
+    { label: 'Onboarding', y: 52, children: [
+      { label: "I'm a Learner",  y: 28 },
+      { label: "I'm a Teacher",  y: 62 },
+      { label: "I'm a Parent",   y: 96 },
+    ]},
+    { label: 'Learn',      y: 185, children: [
+      { label: 'Math',           y: 136, sub3: [{ label: 'Arithmetic', y: 116 }, { label: 'Algebra', y: 146 }, { label: 'Calculus', y: 176 }] },
+      { label: 'Science',        y: 200 },
+      { label: 'Computing',      y: 234 },
+      { label: 'Humanities',     y: 268 },
+      { label: 'Test Prep',      y: 302 },
+    ]},
+    { label: 'Practice',   y: 380, children: [
+      { label: 'Mastery System', y: 354 },
+      { label: 'Daily Goals',    y: 388 },
+      { label: 'Video Lessons',  y: 422 },
+      { label: 'Exercises',      y: 456 },
+    ]},
+    { label: 'Classroom',  y: 514, children: [
+      { label: 'Assignments',    y: 490 },
+      { label: 'Class Roster',   y: 524 },
+      { label: 'Reports',        y: 558 },
+    ]},
+    { label: 'Parent View', y: 604, children: [
+      { label: "Child Progress", y: 583 },
+      { label: 'Manage Accounts', y: 617 },
+    ]},
+    { label: 'Profile',    y: 668, children: [
+      { label: 'Badges & Points', y: 648 },
+      { label: 'Settings',        y: 682 },
+      { label: 'Avatar',          y: 716 },
+    ]},
+  ];
+
+  // Root
+  drawNode(svg, C0, 335, ROOT_W, ROOT_H, 'Khan Academy', 'Free Education', '#1865f2', 11.5);
+
+  sections.forEach(sec => {
+    drawNode(svg, C1, sec.y - L1_H / 2, L1_W, L1_H, sec.label, null, '#14bf96', 11);
+    drawConn(svg, C0 + ROOT_W, 335 + ROOT_H / 2, C1, sec.y, '#14bf96', 0.4, 1.5);
+
+    sec.children.forEach(child => {
+      drawNode(svg, C2, child.y - L2_H / 2, L2_W, L2_H, child.label, null, '#9059ff', 10);
+      drawConn(svg, C1 + L1_W, sec.y, C2, child.y, '#9059ff', 0.35, 1.2);
+
+      if (child.sub3) {
+        child.sub3.forEach(s3 => {
+          drawNode(svg, C3, s3.y - L3_H / 2, L3_W, L3_H, s3.label, null, '#ff8c00', 9.5);
+          drawConn(svg, C2 + L2_W, child.y, C3, s3.y, '#ff8c00', 0.4, 1);
+        });
+      }
+    });
+  });
+}
+
+// ─── Render both ──────────────────────────────────────────────────────────────
+
+buildDuolingo(document.getElementById('duo-svg'));
+buildKhan(document.getElementById('khan-svg'));
+</script>
+
+<!-- Key ──────────────────────────────────────────────────────────────────── -->
+<div style="margin-top:60px; padding-top:24px; border-top:1px solid #111; display:flex; gap:48px; flex-wrap:wrap;">
+  <div>
+    <p style="font-size:10px;color:#333;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;">Reading the diagram</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:#555;">
+        <div style="width:36px;height:2px;background:#555;border-radius:1px;opacity:.5;"></div>
+        <span>Connection between parent → child page</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:#555;">
+        <div style="width:14px;height:14px;border-radius:4px;background:#58cc02;opacity:.8;"></div>
+        <span>Root / entry point</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:#555;">
+        <div style="width:14px;height:14px;border-radius:4px;background:#1cb0f6;opacity:.8;"></div>
+        <span>Main navigation sections (L1)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:#555;">
+        <div style="width:14px;height:14px;border-radius:4px;background:#ce82ff;opacity:.8;"></div>
+        <span>Features / screens (L2)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:11px;color:#555;">
+        <div style="width:14px;height:14px;border-radius:4px;background:#ff9600;opacity:.8;"></div>
+        <span>Sub-features / states (L3)</span>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:360px;">
+    <p style="font-size:10px;color:#333;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;">Key patterns observed</p>
+    <ul style="font-size:11px;color:#3a3a4a;line-height:1.8;list-style:none;display:flex;flex-direction:column;gap:4px;">
+      <li>✦ Both use a role-based onboarding (learner / teacher / parent)</li>
+      <li>✦ Duolingo is streak-first — gamification lives at every level</li>
+      <li>✦ Khan Academy separates classroom tools from learner tools</li>
+      <li>✦ Both gate social / community behind authenticated profile</li>
+      <li>✦ Duolingo's Shop creates a monetization layer; KA is ad-free</li>
+      <li>✦ Practice is a top-level section in both, not buried in Learn</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

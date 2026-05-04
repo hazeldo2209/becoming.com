@@ -152,8 +152,8 @@ const PLAN_CENTERS = [
 
 // ─── MiniConstellation ────────────────────────────────────────────────────────
 
-function MiniConstellation({ plan, cx, cy, index, onClick }: {
-  plan: ActionPlan; cx: number; cy: number; index: number; onClick: () => void;
+function MiniConstellation({ plan, cx, cy, index, onClick, pulse = false }: {
+  plan: ActionPlan; cx: number; cy: number; index: number; onClick: () => void; pulse?: boolean;
 }) {
   const tasks     = plan.tasks ?? [];
   const shape     = getConstellationForTask(plan.task, plan.id);
@@ -198,6 +198,21 @@ function MiniConstellation({ plan, cx, cy, index, onClick }: {
           transition={{ delay: index * 0.14 + 0.1 + i * 0.06, type: 'spring', stiffness: 200 }}
           style={{ filter: pos.task.completed ? `drop-shadow(0 0 5px ${pos.glow})` : `drop-shadow(0 0 2px ${pos.glow})` }} />
       ))}
+      {/* Pulsing ring on brightest star to hint interactivity */}
+      {pulse && starPos.length > 0 && (
+        <motion.circle
+          cx={starPos[0].x} cy={starPos[0].y}
+          r={starPos[0].radius + 4}
+          fill="none"
+          stroke={mainColor}
+          strokeWidth="1.2"
+          animate={{
+            r:       [starPos[0].radius + 3, starPos[0].radius + 9, starPos[0].radius + 3],
+            opacity: [0.55, 0, 0.55],
+          }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: index * 0.35 }}
+        />
+      )}
       {allDone && (
         <motion.circle cx={cx} cy={cy} r={36} fill="none"
           stroke={CLAIMED_COLOR} strokeWidth="0.7" opacity={0.2}
@@ -684,6 +699,14 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [manageOpen, setManageOpen]         = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() =>
+    typeof localStorage !== 'undefined' && !localStorage.getItem('sky_onboarding_seen')
+  );
+
+  const dismissOnboarding = () => {
+    localStorage.setItem('sky_onboarding_seen', '1');
+    setShowOnboarding(false);
+  };
 
   // ── Plan mutation helpers ──────────────────────────────────────────────────
 
@@ -843,11 +866,47 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
               const pos = PLAN_CENTERS[i % PLAN_CENTERS.length];
               return (
                 <MiniConstellation key={plan.id} plan={plan} cx={pos.cx} cy={pos.cy} index={i}
-                  onClick={() => { setSelectedPlanId(plan.id); setView('aiTask'); }} />
+                  pulse={showOnboarding}
+                  onClick={() => { dismissOnboarding(); setSelectedPlanId(plan.id); setView('aiTask'); }} />
               );
             })
           )}
         </svg>
+
+        {/* First-visit onboarding tooltip */}
+        <AnimatePresence>
+          {showOnboarding && plans.length > 0 && (
+            <motion.div
+              className="absolute left-[12px] bottom-[14px] z-10"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ delay: 1.0, duration: 0.45 }}
+            >
+              <div
+                className="rounded-[12px] px-[12px] py-[9px] flex items-start gap-[8px] max-w-[230px]"
+                style={{
+                  background: 'rgba(14,13,26,0.92)',
+                  border: '1px solid rgba(196,160,224,0.35)',
+                  boxShadow: '0 4px 18px rgba(196,160,224,0.18)',
+                }}
+              >
+                <p className="text-[11px] leading-[1.5]" style={{ color: '#c4a0e0' }}>✦</p>
+                <div className="flex-1">
+                  <p className="text-[#f0e6cc] text-[11px] font-medium leading-[1.4]">
+                    Tap a constellation to explore your actions
+                  </p>
+                  <p className="text-[#8888a0] text-[10px] mt-[2px]">Each star is a task in your plan</p>
+                </div>
+                <motion.button
+                  className="text-[#555568] text-[12px] shrink-0 mt-[-1px]"
+                  whileTap={{ scale: 0.88 }}
+                  onClick={dismissOnboarding}
+                >✕</motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Sub-view links */}

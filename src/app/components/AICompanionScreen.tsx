@@ -679,6 +679,13 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
         </AnimatePresence>
       </div>
 
+      {/* ── Privacy label ─────────────────────────────────────────────────── */}
+      <div className="absolute left-[17px] bottom-[160px] flex items-center gap-[5px]">
+        <p className="text-[10px]" style={{ color: isDark ? '#444458' : '#7a8fa0' }}>
+          🔒 Your reflections are private and never shared
+        </p>
+      </div>
+
       {/* ── Input ─────────────────────────────────────────────────────────── */}
       <div className="absolute left-[17px] bottom-[106px] flex gap-[6px]">
         <div className="bg-[#0b0a18] border border-[#333333] h-[48px] rounded-[24px] w-[295px] flex items-center px-[18px]">

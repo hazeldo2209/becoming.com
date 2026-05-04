@@ -200,7 +200,7 @@ export default function WelcomeScreen({ onNavigate }: any) {
         whileTap={{ scale: 0.98 }}
         onClick={() => onNavigate('signup')}
       >
-        <p className="font-bold text-[#08080f] text-[16px]">Begin Your Journey</p>
+        <p className="font-bold text-[#08080f] text-[16px]">Begin Becoming</p>
       </motion.button>
 
       {/* Already have an account link */}

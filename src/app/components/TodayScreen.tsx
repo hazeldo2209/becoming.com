@@ -1,4 +1,5 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Starfield, NebulaGlow } from './CosmicElements';
 
 function NavIcon({ type, active, onClick }: any) {
@@ -44,6 +45,13 @@ function NavIcon({ type, active, onClick }: any) {
 }
 
 export default function TodayScreen({ onNavigate }: any) {
+  const [doneAnyway, setDoneAnyway] = useState(false);
+
+  const handleDoneAnyway = () => {
+    setDoneAnyway(true);
+    setTimeout(() => onNavigate('sky'), 900);
+  };
+
   return (
     <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
       <Starfield density={30} />
@@ -88,6 +96,36 @@ export default function TodayScreen({ onNavigate }: any) {
         <p className="absolute font-normal left-[16px] text-[#888888] text-[11px] top-[118px] whitespace-pre">
           ✦  Reflect  ·  Take action  ·  Share
         </p>
+
+        {/* "I did it anyway" — past-tense secondary action */}
+        <AnimatePresence>
+          {!doneAnyway ? (
+            <motion.button
+              key="btn"
+              className="absolute right-[14px] bottom-[14px] cursor-pointer"
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => { e.stopPropagation(); handleDoneAnyway(); }}
+              exit={{ opacity: 0, scale: 0.8 }}
+            >
+              <p className="text-[#555568] text-[11px]">I did it anyway ✦</p>
+            </motion.button>
+          ) : (
+            <motion.div
+              key="star"
+              className="absolute right-[14px] bottom-[14px] flex items-center gap-[4px]"
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+            >
+              <motion.p
+                className="text-[#d4af78] text-[16px]"
+                animate={{ rotate: [0, 20, -20, 10, 0], scale: [1, 1.4, 1] }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              >✦</motion.p>
+              <p className="text-[#d4af78] text-[11px] font-medium">Star added!</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Focus Areas */}

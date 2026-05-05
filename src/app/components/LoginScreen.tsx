@@ -341,7 +341,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
             {/* ── Remember username + Forgot password row (sign-in only) ──────── */}
             {mode === 'signin' && (
               <motion.div
-                className="absolute left-1/2 -translate-x-1/2 top-[418px] w-[320px] flex items-center justify-between"
+                className="absolute left-1/2 -translate-x-1/2 top-[438px] w-[320px] flex items-center justify-between"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.52 }}
               >
                 <StarCheckbox
@@ -372,7 +372,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
               {error && (
                 <motion.p
                   className="absolute left-1/2 -translate-x-1/2 text-[#e0a888] text-[12px] text-center w-[300px]"
-                  style={{ top: mode === 'signin' ? 458 : 514 }}
+                  style={{ top: mode === 'signin' ? 478 : 514 }}
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 >
                   {error}
@@ -384,7 +384,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
             <motion.button
               className="absolute left-1/2 -translate-x-1/2 h-[54px] w-[320px] rounded-[27px] cursor-pointer flex items-center justify-center gap-[8px]"
               style={{
-                top: mode === 'signup' ? 548 : 490,
+                top: mode === 'signup' ? 548 : 510,
                 background: '#d4af78',
                 boxShadow: '0 0 24px rgba(212, 175, 120, 0.3)',
               }}
@@ -406,7 +406,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
             {/* Divider */}
             <motion.div
               className="absolute left-1/2 -translate-x-1/2 w-[320px] flex items-center"
-              style={{ top: mode === 'signup' ? 632 : 574 }}
+              style={{ top: mode === 'signup' ? 632 : 594 }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}
             >
               <div className="h-[1px] bg-[#333333] flex-1" />
@@ -417,7 +417,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
             {/* Toggle mode */}
             <motion.button
               className="absolute left-1/2 -translate-x-1/2 cursor-pointer"
-              style={{ top: mode === 'signup' ? 668 : 610 }}
+              style={{ top: mode === 'signup' ? 668 : 630 }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
               onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); setName(''); }}
             >

@@ -169,9 +169,9 @@ function IllustrationAI() {
 const SLIDES = [
   {
     key: 'welcome',
-    eyebrow: '',
-    headline: 'You just chose\nto become.',
-    headlineAccent: 'to become.',
+    eyebrow: 'WELCOME TO',
+    headline: 'Becoming.',
+    headlineAccent: 'Becoming.',
     body: "Becoming is your space to reflect on where you are, plan where you're going, and take real action — one star at a time.",
     cta: 'Show me around',
     illustration: IllustrationWelcome,

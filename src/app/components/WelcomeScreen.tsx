@@ -205,15 +205,13 @@ export default function WelcomeScreen({ onNavigate }: any) {
 
       {/* Already have an account link */}
       <motion.button
-        className="absolute left-1/2 -translate-x-1/2 top-[727px] cursor-pointer"
+        className="absolute left-1/2 -translate-x-1/2 top-[727px] cursor-pointer whitespace-nowrap font-normal text-[#9898a8] text-[12px]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 3.5, duration: 1 }}
         onClick={() => onNavigate('login')}
       >
-        <p className="font-normal text-[#9898a8] text-[12px]">
-          Already have an account?  <span className="text-[#888888]">Sign in →</span>
-        </p>
+        Already have an account?{' '}<span className="text-[#888888]">Sign in →</span>
       </motion.button>
 
       {/* Home indicator */}

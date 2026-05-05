@@ -625,7 +625,217 @@ function ZoomedStarOverlay({
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-type ViewMode = 'chat' | 'constellation' | 'board';
+type ViewMode = 'chat' | 'constellation' | 'board' | 'manual';
+
+// ─── Manual plan builder ───────────────────────────────────────────────────────
+
+type ManualDraft = {
+  id: string;
+  text: string;
+  column: 'do-now' | 'this-week' | 'plan-ahead';
+  timeLabel: string;
+  timeMinutes: number;
+};
+
+const TIME_CHIPS = [
+  { label: '5 min',  minutes: 5   },
+  { label: '15 min', minutes: 15  },
+  { label: '30 min', minutes: 30  },
+  { label: '1 hr',   minutes: 60  },
+  { label: '2 hr+',  minutes: 120 },
+];
+const COL_CHIPS: { label: string; id: ManualDraft['column']; color: string }[] = [
+  { label: 'Do Now',     id: 'do-now',     color: '#88c8a8' },
+  { label: 'This Week',  id: 'this-week',  color: '#d4af78' },
+  { label: 'Plan Ahead', id: 'plan-ahead', color: '#c4a0e0' },
+];
+
+function newDraft(): ManualDraft {
+  return { id: Date.now().toString() + Math.random(), text: '', column: 'this-week', timeLabel: '30 min', timeMinutes: 30 };
+}
+
+function ManualBuilder({ onSave, onBack }: {
+  onSave: (goalName: string, tasks: KanbanTask[]) => void;
+  onBack: () => void;
+}) {
+  const [goalName, setGoalName] = useState('');
+  const [drafts, setDrafts]     = useState<ManualDraft[]>([newDraft()]);
+
+  const updateDraft = (id: string, patch: Partial<ManualDraft>) =>
+    setDrafts(prev => prev.map(d => d.id === id ? { ...d, ...patch } : d));
+
+  const removeDraft = (id: string) =>
+    setDrafts(prev => prev.filter(d => d.id !== id));
+
+  const handleSave = () => {
+    const name = goalName.trim();
+    if (!name) return;
+    const valid = drafts.filter(d => d.text.trim());
+    if (!valid.length) return;
+
+    function deriveEffort(mins: number): 'low' | 'medium' | 'high' {
+      if (mins <= 15) return 'low';
+      if (mins <= 60) return 'medium';
+      return 'high';
+    }
+    function derivePriority(mins: number): 'p1' | 'p2' | 'p3' {
+      if (mins <= 15) return 'p1';
+      if (mins <= 60) return 'p2';
+      return 'p3';
+    }
+
+    const tasks: KanbanTask[] = valid.map((d, i) => ({
+      id: String(i + 1),
+      text: d.text.trim(),
+      details: '',
+      effort: deriveEffort(d.timeMinutes),
+      timeLabel: d.timeLabel,
+      timeMinutes: d.timeMinutes,
+      column: d.column,
+      priority: derivePriority(d.timeMinutes),
+      completed: false,
+    }));
+    onSave(name, tasks);
+  };
+
+  const canSave = goalName.trim().length > 0 && drafts.some(d => d.text.trim());
+
+  return (
+    <motion.div
+      key="manual"
+      className="py-[8px] space-y-[14px]"
+      initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.28 }}
+    >
+      {/* Back link */}
+      <motion.button
+        className="flex items-center gap-[5px] mb-[4px]"
+        whileTap={{ scale: 0.92 }}
+        onClick={onBack}
+      >
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+          <path d="M13 4l-7 6 7 6" stroke="#8888a0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <p className="text-[#8888a0] text-[13px]">Use AI instead</p>
+      </motion.button>
+
+      {/* Plan name */}
+      <div>
+        <p className="text-[11px] tracking-[0.12em] uppercase text-[#555568] mb-[6px]">Plan name</p>
+        <input
+          autoFocus
+          className="w-full bg-transparent outline-none text-[#f0e6cc] text-[16px] font-semibold placeholder:text-[#3a3a4a] border-b border-[#2a2a3a] pb-[8px] focus:border-[#c4a0e0] transition-colors"
+          placeholder="e.g. Launch my portfolio"
+          value={goalName}
+          onChange={e => setGoalName(e.target.value)}
+        />
+      </div>
+
+      {/* Tasks */}
+      <div>
+        <div className="flex items-center justify-between mb-[8px]">
+          <p className="text-[11px] tracking-[0.12em] uppercase text-[#555568]">
+            Tasks ({drafts.filter(d => d.text.trim()).length})
+          </p>
+          <motion.button
+            className="flex items-center gap-[4px] px-[10px] h-[26px] rounded-[8px]"
+            style={{ background: 'rgba(196,160,224,0.13)', border: '1px solid rgba(196,160,224,0.30)' }}
+            whileTap={{ scale: 0.93 }}
+            onClick={() => setDrafts(prev => [...prev, newDraft()])}
+          >
+            <p className="text-[#c4a0e0] text-[12px] font-medium">+ Add</p>
+          </motion.button>
+        </div>
+
+        <div className="space-y-[10px]">
+          <AnimatePresence>
+            {drafts.map(d => (
+              <motion.div
+                key={d.id}
+                layout
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.22 }}
+                className="rounded-[14px] px-[12px] py-[10px]"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                {/* Task name row */}
+                <div className="flex items-center gap-[8px] mb-[8px]">
+                  <input
+                    className="flex-1 bg-transparent outline-none text-[#f0e6cc] text-[13px] placeholder:text-[#444458]"
+                    placeholder="What needs to be done?"
+                    value={d.text}
+                    onChange={e => updateDraft(d.id, { text: e.target.value })}
+                  />
+                  {drafts.length > 1 && (
+                    <motion.button whileTap={{ scale: 0.85 }} onClick={() => removeDraft(d.id)}>
+                      <p className="text-[#444458] text-[16px] leading-none">×</p>
+                    </motion.button>
+                  )}
+                </div>
+
+                {/* Column chips */}
+                <div className="flex gap-[5px] mb-[6px] flex-wrap">
+                  {COL_CHIPS.map(c => (
+                    <motion.button
+                      key={c.id}
+                      className="px-[8px] h-[22px] rounded-full text-[11px] font-medium"
+                      style={{
+                        background: d.column === c.id ? c.color + '22' : 'rgba(255,255,255,0.04)',
+                        border:     `1px solid ${d.column === c.id ? c.color + '66' : 'rgba(255,255,255,0.08)'}`,
+                        color:      d.column === c.id ? c.color : '#666680',
+                      }}
+                      whileTap={{ scale: 0.93 }}
+                      onClick={() => updateDraft(d.id, { column: c.id })}
+                    >
+                      {c.label}
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Time chips */}
+                <div className="flex gap-[5px] flex-wrap">
+                  {TIME_CHIPS.map(t => (
+                    <motion.button
+                      key={t.label}
+                      className="px-[8px] h-[22px] rounded-full text-[11px]"
+                      style={{
+                        background: d.timeMinutes === t.minutes ? 'rgba(212,175,120,0.18)' : 'rgba(255,255,255,0.04)',
+                        border:     `1px solid ${d.timeMinutes === t.minutes ? 'rgba(212,175,120,0.50)' : 'rgba(255,255,255,0.08)'}`,
+                        color:      d.timeMinutes === t.minutes ? '#d4af78' : '#666680',
+                      }}
+                      whileTap={{ scale: 0.93 }}
+                      onClick={() => updateDraft(d.id, { timeLabel: t.label, timeMinutes: t.minutes })}
+                    >
+                      {t.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Save button */}
+      <motion.button
+        className="w-full h-[48px] rounded-[24px] flex items-center justify-center gap-[8px]"
+        style={{
+          background:  canSave ? '#c4a0e0' : 'rgba(255,255,255,0.06)',
+          boxShadow:   canSave ? '0 0 24px rgba(196,160,224,0.30)' : 'none',
+          border:      canSave ? 'none' : '1px solid rgba(255,255,255,0.08)',
+          cursor:      canSave ? 'pointer' : 'default',
+        }}
+        whileTap={canSave ? { scale: 0.97 } : {}}
+        onClick={canSave ? handleSave : undefined}
+      >
+        <p className="font-bold text-[14px]" style={{ color: canSave ? '#08080f' : '#444458' }}>
+          Save Constellation ✦
+        </p>
+      </motion.button>
+    </motion.div>
+  );
+}
 
 export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, user, userMood, userEnergy }: {
   onNavigate: (screen: string) => void;
@@ -765,6 +975,20 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
     setView('chat');
   };
 
+  const handleSaveManual = useCallback((goalName: string, tasks: KanbanTask[]) => {
+    const plan: ActionPlan = {
+      id: Date.now().toString(),
+      task: goalName,
+      tasks,
+      createdAt: new Date().toISOString(),
+      conversation: [],
+    };
+    setAiPlans(prev => [...prev, plan]);
+    savePlanToDb(plan);
+    setActivePlanId(plan.id);
+    setView('constellation');
+  }, [setAiPlans, savePlanToDb]);
+
   const handleSelectPlan = (planId: string) => {
     setActivePlanId(planId);
     setView('chat');
@@ -858,7 +1082,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
   // Active plan title for header — truncated
   const planTitle = localPlan
     ? (localPlan.task.length > 22 ? localPlan.task.slice(0, 22) + '…' : localPlan.task)
-    : 'New Chat';
+    : view === 'manual' ? 'Build Your Plan' : 'New Chat';
 
   return (
     <div
@@ -953,6 +1177,14 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
       >
         <AnimatePresence mode="wait">
 
+          {/* MANUAL BUILDER VIEW */}
+          {view === 'manual' && isNewMode && (
+            <ManualBuilder
+              onSave={handleSaveManual}
+              onBack={() => setView('chat')}
+            />
+          )}
+
           {/* CHAT VIEW */}
           {view === 'chat' && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -970,6 +1202,63 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
                     {localPlan.tasks.filter(t => t.completed).length}/{localPlan.tasks.length} tasks completed
                     · {new Date(localPlan.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </p>
+                </motion.div>
+              )}
+
+              {/* Choice cards — shown in new mode before any user message */}
+              {isNewMode && newModeMessages.length === 1 && (
+                <motion.div
+                  className="flex flex-col gap-[8px] pt-[4px]"
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.3 }}
+                >
+                  {/* AI option */}
+                  <motion.button
+                    className="w-full rounded-[16px] px-[14px] py-[12px] flex items-center gap-[12px] text-left"
+                    style={{
+                      background: 'rgba(196,160,224,0.10)',
+                      border: '1px solid rgba(196,160,224,0.30)',
+                    }}
+                    whileHover={{ background: 'rgba(196,160,224,0.16)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+                      input?.focus();
+                    }}
+                  >
+                    <div className="size-[36px] rounded-[10px] flex items-center justify-center shrink-0"
+                      style={{ background: 'rgba(196,160,224,0.18)', border: '1px solid rgba(196,160,224,0.35)' }}>
+                      <p className="text-[16px]">✦</p>
+                    </div>
+                    <div>
+                      <p className="text-[#c4a0e0] text-[13px] font-semibold">Let AI map it out</p>
+                      <p className="text-[#666680] text-[11px] mt-[1px]">Describe your goal — AI builds the plan</p>
+                    </div>
+                  </motion.button>
+
+                  {/* Manual option */}
+                  <motion.button
+                    className="w-full rounded-[16px] px-[14px] py-[12px] flex items-center gap-[12px] text-left"
+                    style={{
+                      background: 'rgba(212,175,120,0.08)',
+                      border: '1px solid rgba(212,175,120,0.25)',
+                    }}
+                    whileHover={{ background: 'rgba(212,175,120,0.14)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setView('manual')}
+                  >
+                    <div className="size-[36px] rounded-[10px] flex items-center justify-center shrink-0"
+                      style={{ background: 'rgba(212,175,120,0.15)', border: '1px solid rgba(212,175,120,0.30)' }}>
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                        <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z"
+                          stroke="#d4af78" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[#d4af78] text-[13px] font-semibold">Build it myself</p>
+                      <p className="text-[#666680] text-[11px] mt-[1px]">Add your own tasks, columns & time</p>
+                    </div>
+                  </motion.button>
                 </motion.div>
               )}
 
@@ -1073,13 +1362,16 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
       </div>
 
       {/* Privacy label */}
-      <div className="absolute left-[17px] bottom-[160px] flex items-center gap-[5px]">
-        <p className="text-[10px]" style={{ color: isDark ? '#444458' : '#7a8fa0' }}>
-          🔒 Your reflections are private and never shared
-        </p>
-      </div>
+      {view !== 'manual' && (
+        <div className="absolute left-[17px] bottom-[160px] flex items-center gap-[5px]">
+          <p className="text-[10px]" style={{ color: isDark ? '#444458' : '#7a8fa0' }}>
+            🔒 Your reflections are private and never shared
+          </p>
+        </div>
+      )}
 
       {/* Input row */}
+      {view !== 'manual' && (
       <div className="absolute left-[17px] bottom-[106px] flex gap-[6px]">
         <div
           className="h-[48px] rounded-[24px] w-[295px] flex items-center px-[18px]"
@@ -1105,6 +1397,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
           <p className="font-bold text-[18px] text-[#08080f]">↑</p>
         </motion.button>
       </div>
+      )}
 
       {/* Bottom nav */}
       <div

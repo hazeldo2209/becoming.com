@@ -76,7 +76,7 @@ function NavIcon({ type, active, onClick }: any) {
   );
 }
 
-// ─── Plan switcher chip ───────────────────────────────────────────────────────
+// ─── Column accent colours for history items ──────────────────────────────────
 
 const COL_CHIP: Record<string, string> = {
   'do-now': '#88c8a8', 'this-week': '#d4af78', 'plan-ahead': '#c4a0e0',
@@ -89,37 +89,164 @@ function planDominantColor(plan: ActionPlan): string {
   return COL_CHIP[top] ?? '#d4af78';
 }
 
-function PlanChip({ plan, active, onClick }: { plan: ActionPlan; active: boolean; onClick: () => void }) {
-  const color    = planDominantColor(plan);
-  const done     = plan.tasks.filter(t => t.completed).length;
-  const total    = plan.tasks.length;
-  const allDone  = done === total && total > 0;
-  const label    = plan.task.length > 18 ? plan.task.slice(0, 18) + '…' : plan.task;
+// ─── History drawer ───────────────────────────────────────────────────────────
 
+function HistoryDrawer({
+  plans,
+  activePlanId,
+  onNewChat,
+  onSelectPlan,
+  onClose,
+}: {
+  plans: ActionPlan[];
+  activePlanId: string | null;
+  onNewChat: () => void;
+  onSelectPlan: (id: string) => void;
+  onClose: () => void;
+}) {
   return (
-    <motion.button
-      className="flex items-center gap-[6px] px-[10px] h-[28px] rounded-full border shrink-0"
-      style={{
-        borderColor: active ? color : '#252535',
-        background:  active ? `${color}22` : 'transparent',
-      }}
-      whileTap={{ scale: 0.94 }}
-      onClick={onClick}
-    >
-      {/* Progress dots */}
-      <div className="flex gap-[2px] items-center">
-        {plan.tasks.slice(0, 6).map((t, i) => (
-          <div key={i} className="rounded-full"
+    <>
+      {/* Backdrop */}
+      <motion.div
+        className="absolute inset-0 z-[40]"
+        style={{ background: 'rgba(4,4,12,0.65)' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.22 }}
+        onClick={onClose}
+      />
+
+      {/* Drawer panel */}
+      <motion.div
+        className="absolute top-0 left-0 bottom-0 z-[50] flex flex-col rounded-l-[36px] rounded-r-[24px] overflow-hidden"
+        style={{
+          width: 288,
+          background: 'linear-gradient(160deg, #0d0b1e 0%, #09091a 100%)',
+          borderRight: '1px solid rgba(196,160,224,0.14)',
+          boxShadow: '6px 0 40px rgba(4,4,12,0.7)',
+        }}
+        initial={{ x: -288 }}
+        animate={{ x: 0 }}
+        exit={{ x: -288 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 36 }}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-[20px] pt-[56px] pb-[16px]">
+          <div className="flex items-center gap-[8px]">
+            <p className="text-[18px]">✦</p>
+            <p className="font-bold text-[#f0e6cc] text-[16px] tracking-tight">Becoming AI</p>
+          </div>
+          <motion.button
+            className="size-[32px] rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.06)' }}
+            whileTap={{ scale: 0.88 }}
+            onClick={onClose}
+          >
+            <p className="text-[#8888a0] text-[16px] leading-none">✕</p>
+          </motion.button>
+        </div>
+
+        {/* New Chat button */}
+        <div className="px-[16px] pb-[16px]">
+          <motion.button
+            className="w-full h-[44px] rounded-[14px] flex items-center gap-[10px] px-[14px]"
             style={{
-              width: 4, height: 4,
-              backgroundColor: t.completed ? (active ? color : CLAIMED_COLOR) : '#2a2a3a',
+              background: 'rgba(196,160,224,0.13)',
+              border: '1px solid rgba(196,160,224,0.35)',
             }}
-          />
-        ))}
-      </div>
-      <p className="text-[12px] font-medium" style={{ color: active ? color : '#8888a0' }}>{label}</p>
-      {allDone && <span style={{ fontSize: 11, color }}>✓</span>}
-    </motion.button>
+            whileHover={{ background: 'rgba(196,160,224,0.20)' }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => { onNewChat(); onClose(); }}
+          >
+            {/* Pencil icon */}
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+              <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z"
+                stroke="#c4a0e0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <p className="text-[#c4a0e0] text-[14px] font-semibold">New Chat</p>
+          </motion.button>
+        </div>
+
+        {/* Divider */}
+        <div className="mx-[16px] h-[1px] bg-[#1e1e32] mb-[12px]" />
+
+        {/* History list */}
+        <div className="flex-1 overflow-y-auto px-[16px] pb-[20px]" style={{ scrollbarWidth: 'none' }}>
+          {plans.length === 0 ? (
+            <div className="flex flex-col items-center justify-center pt-[40px] gap-[10px]">
+              <p className="text-[32px] opacity-30">✦</p>
+              <p className="text-[#8888a0] text-[13px] text-center leading-relaxed">
+                Your plans will{'\n'}appear here
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-[11px] tracking-widest uppercase text-[#555568] mb-[10px] pl-[2px]">
+                Previous Plans
+              </p>
+              <div className="space-y-[6px]">
+                {[...plans].reverse().map(plan => {
+                  const color    = planDominantColor(plan);
+                  const done     = plan.tasks.filter(t => t.completed).length;
+                  const total    = plan.tasks.length;
+                  const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
+                  const isActive = plan.id === activePlanId;
+                  const date     = new Date(plan.createdAt).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric',
+                  });
+
+                  return (
+                    <motion.button
+                      key={plan.id}
+                      className="w-full text-left rounded-[14px] px-[12px] py-[10px] flex flex-col gap-[6px]"
+                      style={{
+                        background: isActive ? `${color}14` : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${isActive ? color + '40' : 'rgba(255,255,255,0.06)'}`,
+                      }}
+                      whileHover={{ background: isActive ? `${color}1e` : 'rgba(255,255,255,0.06)' }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => { onSelectPlan(plan.id); onClose(); }}
+                    >
+                      {/* Goal text */}
+                      <p
+                        className="text-[13px] font-medium leading-snug"
+                        style={{
+                          color: isActive ? color : '#c8c8d8',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {plan.task}
+                      </p>
+
+                      {/* Progress row */}
+                      <div className="flex items-center justify-between gap-[8px]">
+                        {/* Progress bar */}
+                        <div className="flex-1 h-[3px] rounded-full bg-[#1e1e32] overflow-hidden">
+                          <motion.div
+                            className="h-full rounded-full"
+                            style={{ backgroundColor: color, width: `${pct}%` }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.6, ease: 'easeOut' }}
+                          />
+                        </div>
+                        <p className="text-[11px] shrink-0" style={{ color: '#666680' }}>
+                          {done}/{total} · {date}
+                        </p>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -286,7 +413,6 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
   const { isDark } = useTheme();
   const plans: ActionPlan[] = Array.isArray(aiPlans) ? aiPlans : [];
 
-  // ── Theme tokens — swap every purple/gold inline colour by mode ─────────────
   const T = isDark ? {
     aiBubbleBg:       'rgba(196,160,224,0.14)',
     aiBubbleBorder:   '1px solid rgba(196,160,224,0.25)',
@@ -307,12 +433,12 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
     accentBorder2:    '1px solid rgba(196,160,224,0.28)',
     contextBg:        'rgba(196,160,224,0.06)',
     contextBorder:    '#1e1e2e',
-    newPlanBg:        'rgba(196,160,224,0.15)',
-    newPlanBorder:    '#c4a0e0',
-    newPlanColor:     '#c4a0e0',
     sendBg:           '#c4a0e0',
     sendShadow:       '0 0 20px rgba(196,160,224,0.30)',
     bubbleText:       '#f0e6cc',
+    screenBg:         '#08080f',
+    headerBorder:     'rgba(255,255,255,0.06)',
+    burgerColor:      '#c4a0e0',
   } : {
     aiBubbleBg:       'rgba(255,255,255,0.92)',
     aiBubbleBorder:   '1px solid rgba(92,58,122,0.20)',
@@ -333,24 +459,23 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
     accentBorder2:    '1px solid rgba(92,58,122,0.25)',
     contextBg:        'rgba(255,255,255,0.75)',
     contextBorder:    'rgba(92,58,122,0.15)',
-    newPlanBg:        'rgba(92,58,122,0.08)',
-    newPlanBorder:    '#5c3a7a',
-    newPlanColor:     '#5c3a7a',
     sendBg:           '#5c3a7a',
     sendShadow:       '0 0 12px rgba(92,58,122,0.25)',
     bubbleText:       '#1c3a5c',
+    screenBg:         '#f4f0e8',
+    headerBorder:     'rgba(92,58,122,0.12)',
+    burgerColor:      '#5c3a7a',
   };
 
-  // activePlanId === null → "new plan" mode
   const [activePlanId, setActivePlanId] = useState<string | null>(
     plans.length > 0 ? plans[plans.length - 1].id : null
   );
-  // Conversation shown when in "new plan" mode (before any plan is created)
   const [newModeMessages, setNewModeMessages] = useState<ChatMessage[]>([WELCOME]);
   const [userInput, setUserInput]   = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [view, setView]             = useState<ViewMode>('chat');
   const [zoomedTask, setZoomedTask] = useState<KanbanTask | null>(null);
+  const [showDrawer, setShowDrawer] = useState(false);
   const scrollRef                   = useRef<HTMLDivElement>(null);
 
   const localPlan   = plans.find(p => p.id === activePlanId) ?? null;
@@ -359,7 +484,6 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
     ? newModeMessages
     : (localPlan?.conversation ?? [WELCOME]);
 
-  // Auto-scroll chat
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [displayMessages.length, isProcessing, view]);
@@ -403,7 +527,6 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
     setIsProcessing(true);
 
     if (isNewMode) {
-      // ── Generate new plan ──────────────────────────────────────────────
       setNewModeMessages(prev => [
         ...prev,
         { type: 'user', text: msg },
@@ -431,7 +554,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
         setView('constellation');
       } catch (err: any) {
         setNewModeMessages(prev => [
-          ...prev.slice(0, -1), // remove "Mapping…" placeholder
+          ...prev.slice(0, -1),
           { type: 'ai', text: `Sorry, couldn't generate your plan: ${err.message}` },
         ]);
       } finally {
@@ -439,7 +562,6 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
       }
 
     } else {
-      // ── Continue conversation about existing plan ──────────────────────
       if (!localPlan) { setIsProcessing(false); return; }
       const prevConv = localPlan.conversation ?? [];
       const withUser: ChatMessage[] = [...prevConv, { type: 'user', text: msg }];
@@ -468,12 +590,16 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
     { id: 'board',         icon: '⬛',  label: 'Board' },
   ];
 
-  const inputPlaceholder = isNewMode
-    ? 'What would you like to work on?'
-    : 'Ask about this plan…';
+  // Active plan title for header — truncated
+  const planTitle = localPlan
+    ? (localPlan.task.length > 22 ? localPlan.task.slice(0, 22) + '…' : localPlan.task)
+    : 'New Chat';
 
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+    <div
+      className="overflow-hidden relative rounded-[36px] size-full"
+      style={{ backgroundColor: T.screenBg }}
+    >
       <Starfield density={30} />
       <NebulaGlow color="purple" className="w-[300px] h-[300px] left-[45px] top-[100px]" />
 
@@ -481,80 +607,86 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
       <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
       <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
 
-      {/* ── Plan switcher strip ──────────────────────────────────────────── */}
-      {/* Always reserve space so layout doesn't jump */}
-      <div
-        className="absolute left-0 right-0 top-[48px] h-[34px] flex items-center gap-[8px] overflow-x-auto z-10 px-[17px]"
-        style={{ scrollbarWidth: 'none' }}
-      >
-        {/* New plan button */}
+      {/* ── Header bar ────────────────────────────────────────────────────── */}
+      <div className="absolute left-0 right-0 top-[44px] h-[44px] flex items-center justify-between px-[14px] z-10">
+
+        {/* Hamburger button */}
         <motion.button
-          className="flex items-center gap-[4px] px-[10px] h-[26px] rounded-full border shrink-0"
-          style={{
-            borderColor: isNewMode ? T.newPlanBorder : '#252535',
-            background:  isNewMode ? T.newPlanBg : 'transparent',
-          }}
-          whileTap={{ scale: 0.93 }}
-          onClick={handleNewPlan}
+          className="size-[36px] flex flex-col items-center justify-center gap-[5px] rounded-[10px]"
+          style={{ background: 'rgba(255,255,255,0.05)' }}
+          whileTap={{ scale: 0.88 }}
+          onClick={() => setShowDrawer(true)}
         >
-          <span className="text-[13px]" style={{ color: isNewMode ? T.newPlanColor : T.tabInactiveColor }}>+ New</span>
+          {[0, 1, 2].map(i => (
+            <motion.div
+              key={i}
+              className="rounded-full"
+              style={{
+                width: i === 2 ? 12 : 18,
+                height: 2,
+                backgroundColor: T.burgerColor,
+              }}
+            />
+          ))}
         </motion.button>
 
-        {/* Divider */}
-        {plans.length > 0 && (
-          <div className="w-[1px] h-[16px] bg-[#252535] shrink-0" />
-        )}
-
-        {/* Per-plan chips */}
-        {plans.map(plan => (
-          <PlanChip
-            key={plan.id}
-            plan={plan}
-            active={activePlanId === plan.id}
-            onClick={() => handleSelectPlan(plan.id)}
-          />
-        ))}
-      </div>
-
-      {/* ── Header row ─────────────────────────────────────────────────── */}
-      <div className="absolute left-[17px] right-[17px] top-[86px] flex items-center justify-between z-10">
-        <div className="flex items-center gap-[8px]">
-          <p className="font-bold text-[#f0e6cc] text-[18px]">✦ AI Companion</p>
-          {localPlan && !isNewMode && (
-            <p className="text-[#8888a0] text-[12px] truncate max-w-[140px]">
-              · {localPlan.task.length > 20 ? localPlan.task.slice(0, 20) + '…' : localPlan.task}
+        {/* Center: title */}
+        <div className="flex-1 flex flex-col items-center px-[8px]">
+          <p className="font-bold text-[#f0e6cc] text-[14px] leading-tight truncate max-w-[180px]">
+            {isNewMode ? '✦ AI Companion' : planTitle}
+          </p>
+          {!isNewMode && localPlan && (
+            <p className="text-[10px] tracking-wide" style={{ color: T.tabInactiveColor }}>
+              {localPlan.tasks.filter(t => t.completed).length}/{localPlan.tasks.length} tasks
             </p>
           )}
         </div>
-        {/* View tabs (when plan active) */}
-        {localPlan && (
-          <div className="flex gap-[4px]">
+
+        {/* Right: view tabs (when plan active) or compose icon (new mode) */}
+        {localPlan ? (
+          <div className="flex gap-[3px]">
             {tabs.map(tab => (
               <motion.button
                 key={tab.id}
-                className="flex items-center gap-[3px] px-[8px] h-[28px] rounded-[12px] border text-[11px] font-medium"
+                className="flex items-center gap-[2px] px-[7px] h-[28px] rounded-[10px] border text-[11px] font-medium"
                 style={{
-                  borderColor: view === tab.id ? T.tabActiveBorder  : '#252535',
+                  borderColor: view === tab.id ? T.tabActiveBorder  : 'rgba(255,255,255,0.08)',
                   background:  view === tab.id ? T.tabActiveBg      : 'transparent',
                   color:       view === tab.id ? T.tabActiveColor    : T.tabInactiveColor,
                 }}
-                whileTap={{ scale: 0.93 }}
+                whileTap={{ scale: 0.91 }}
                 onClick={() => setView(tab.id)}
               >
-                <span style={{ fontSize: tab.icon === '✦' ? 10 : 12 }}>{tab.icon}</span>
+                <span style={{ fontSize: tab.icon === '✦' ? 9 : 11 }}>{tab.icon}</span>
                 <span>{tab.label}</span>
               </motion.button>
             ))}
           </div>
+        ) : (
+          /* Compose / pencil button for quick new chat */
+          <motion.button
+            className="size-[36px] flex items-center justify-center rounded-[10px]"
+            style={{ background: 'rgba(196,160,224,0.12)', border: '1px solid rgba(196,160,224,0.25)' }}
+            whileTap={{ scale: 0.88 }}
+            onClick={handleNewPlan}
+          >
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+              <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z"
+                stroke="#c4a0e0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </motion.button>
         )}
       </div>
 
-      <div className="absolute h-[1px] left-[17px] right-[17px] top-[114px] bg-gradient-to-r from-transparent via-[#333333] to-transparent z-10" />
+      <div
+        className="absolute h-[1px] left-[17px] right-[17px] top-[88px] z-10"
+        style={{ background: `linear-gradient(to right, transparent, ${T.headerBorder}, transparent)` }}
+      />
 
       {/* ── Content area ─────────────────────────────────────────────────── */}
       <div
         ref={scrollRef}
-        className="absolute left-0 right-0 top-[122px] bottom-[170px] overflow-y-auto px-[17px]"
+        className="absolute left-0 right-0 top-[96px] bottom-[170px] overflow-y-auto px-[17px]"
         style={{ scrollbarWidth: 'none' }}
       >
         <AnimatePresence mode="wait">
@@ -564,7 +696,6 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="space-y-[12px] py-[8px]">
 
-              {/* Plan context header (when in existing plan) */}
               {localPlan && !isNewMode && (
                 <motion.div
                   className="rounded-[12px] px-[12px] py-[8px] mb-[4px]"
@@ -679,23 +810,27 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
         </AnimatePresence>
       </div>
 
-      {/* ── Privacy label ─────────────────────────────────────────────────── */}
+      {/* Privacy label */}
       <div className="absolute left-[17px] bottom-[160px] flex items-center gap-[5px]">
         <p className="text-[10px]" style={{ color: isDark ? '#444458' : '#7a8fa0' }}>
           🔒 Your reflections are private and never shared
         </p>
       </div>
 
-      {/* ── Input ─────────────────────────────────────────────────────────── */}
+      {/* Input row */}
       <div className="absolute left-[17px] bottom-[106px] flex gap-[6px]">
-        <div className="bg-[#0b0a18] border border-[#333333] h-[48px] rounded-[24px] w-[295px] flex items-center px-[18px]">
+        <div
+          className="h-[48px] rounded-[24px] w-[295px] flex items-center px-[18px]"
+          style={{ background: isDark ? '#0b0a18' : '#ffffff', border: `1px solid ${isDark ? '#333333' : 'rgba(92,58,122,0.2)'}` }}
+        >
           <input
             type="text"
-            placeholder={inputPlaceholder}
+            placeholder={isNewMode ? 'What would you like to work on?' : 'Ask about this plan…'}
             value={userInput}
             onChange={e => setUserInput(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && handleSend()}
-            className="w-full bg-transparent outline-none text-[13px] text-[#f0e6cc] placeholder:text-[#8888a0]"
+            className="w-full bg-transparent outline-none text-[13px] placeholder:text-[#8888a0]"
+            style={{ color: T.bubbleText }}
           />
         </div>
         <motion.button
@@ -710,13 +845,29 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
       </div>
 
       {/* Bottom nav */}
-      <div className="absolute bg-[#0b0a18] border-t border-[#1a1a1a] flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full">
+      <div
+        className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t"
+        style={{ backgroundColor: isDark ? '#0b0a18' : '#f4f0e8', borderColor: isDark ? '#1a1a1a' : 'rgba(92,58,122,0.12)' }}
+      >
         <NavIcon type="today"   active={false} onClick={() => onNavigate('today')}   />
         <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
         <NavIcon type="ai"      active={true}  onClick={() => onNavigate('ai')}      />
         <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
       </div>
       <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+
+      {/* History drawer (slides in over everything) */}
+      <AnimatePresence>
+        {showDrawer && (
+          <HistoryDrawer
+            plans={plans}
+            activePlanId={activePlanId}
+            onNewChat={handleNewPlan}
+            onSelectPlan={handleSelectPlan}
+            onClose={() => setShowDrawer(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Fullscreen star zoom */}
       <AnimatePresence>

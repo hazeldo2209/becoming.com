@@ -421,7 +421,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
               onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); setName(''); }}
             >
-              <p className="font-normal text-[#9898a8] text-[12px]">
+              <p className="font-normal text-[#9898a8] text-[12px] whitespace-nowrap">
                 {mode === 'signin'
                   ? <>Don't have an account?{' '}<span className="text-[#d4af78]">Sign up →</span></>
                   : <>Already have an account?{' '}<span className="text-[#d4af78]">Sign in →</span></>

@@ -86,6 +86,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
   // Track whether the pre-filled value is still "as remembered"
   const savedEmail = localStorage.getItem(LS_EMAIL) ?? '';
 
+  const [name, setName]         = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
@@ -129,13 +130,17 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
 
   // ── Handle sign-up ──────────────────────────────────────────────────────────
   const handleSignUp = async () => {
-    if (!email || !password) { setError('Please fill in both fields.'); return; }
+    if (!name.trim())          { setError('Please enter your name.'); return; }
+    if (!email || !password) { setError('Please fill in all fields.'); return; }
     if (password.length < 6)  { setError('Password must be at least 6 characters.'); return; }
     setLoading(true); setError(null);
     const { error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: { full_name: name.trim() },
+      },
     });
     setLoading(false);
     if (err) { setError(err.message); return; }
@@ -252,9 +257,33 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
               {mode === 'signin' ? 'Sign in to continue your journey' : 'Create your account'}
             </motion.p>
 
+            {/* Name (signup only) */}
+            <AnimatePresence>
+              {mode === 'signup' && (
+                <motion.div
+                  className="absolute left-1/2 -translate-x-1/2 top-[228px] w-[320px]"
+                  key="name-field"
+                  initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}
+                >
+                  <p className="font-normal text-[#888888] text-[12px] mb-[8px]">Your Name</p>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); setError(null); }}
+                    placeholder="What should we call you?"
+                    className={inputClass}
+                    onFocus={glowFocus}
+                    onBlur={glowBlur}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Email */}
             <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[250px] w-[320px]"
+              className="absolute left-1/2 -translate-x-1/2 w-[320px]"
+              style={{ top: mode === 'signup' ? 310 : 250 }}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
             >
@@ -286,7 +315,8 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
 
             {/* Password */}
             <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[348px] w-[320px]"
+              className="absolute left-1/2 -translate-x-1/2 w-[320px]"
+              style={{ top: mode === 'signup' ? 408 : 348 }}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
             >
@@ -342,7 +372,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
               {error && (
                 <motion.p
                   className="absolute left-1/2 -translate-x-1/2 text-[#e0a888] text-[12px] text-center w-[300px]"
-                  style={{ top: mode === 'signin' ? 458 : 444 }}
+                  style={{ top: mode === 'signin' ? 458 : 514 }}
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 >
                   {error}
@@ -354,7 +384,7 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
             <motion.button
               className="absolute left-1/2 -translate-x-1/2 h-[54px] w-[320px] rounded-[27px] cursor-pointer flex items-center justify-center gap-[8px]"
               style={{
-                top: 490,
+                top: mode === 'signup' ? 548 : 490,
                 background: '#d4af78',
                 boxShadow: '0 0 24px rgba(212, 175, 120, 0.3)',
               }}
@@ -375,7 +405,8 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
 
             {/* Divider */}
             <motion.div
-              className="absolute left-1/2 -translate-x-1/2 top-[574px] w-[320px] flex items-center"
+              className="absolute left-1/2 -translate-x-1/2 w-[320px] flex items-center"
+              style={{ top: mode === 'signup' ? 632 : 574 }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}
             >
               <div className="h-[1px] bg-[#333333] flex-1" />
@@ -385,9 +416,10 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
 
             {/* Toggle mode */}
             <motion.button
-              className="absolute left-1/2 -translate-x-1/2 top-[610px] cursor-pointer"
+              className="absolute left-1/2 -translate-x-1/2 cursor-pointer"
+              style={{ top: mode === 'signup' ? 668 : 610 }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
-              onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); }}
+              onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); setName(''); }}
             >
               <p className="font-normal text-[#9898a8] text-[12px]">
                 {mode === 'signin'

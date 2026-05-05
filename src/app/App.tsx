@@ -13,7 +13,7 @@ import SolidarityScreen from './components/YoureNotAloneScreen';
 import ProfileScreen from './components/ProfileScreen';
 import SharedReflectionsScreen from './components/SharedReflectionsScreen';
 import OnboardingScreen, { LS_ONBOARDING } from './components/OnboardingScreen';
-import type { ActionPlan } from './types';
+import type { ActionPlan, KanbanTask, ChatMessage } from './types';
 import { supabase } from '@/app/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
@@ -41,6 +41,32 @@ function AppContent() {
   const [aiPlans, setAiPlans] = useState<ActionPlan[]>([]);
   const [user, setUser]         = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+
+  // ── Load AI plans from Supabase whenever the logged-in user changes ──────────
+  useEffect(() => {
+    if (!user) {
+      setAiPlans([]);
+      return;
+    }
+    supabase
+      .from('ai_plans')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          setAiPlans(
+            data.map(row => ({
+              id:           row.id,
+              task:         row.task,
+              tasks:        row.tasks        as KanbanTask[],
+              conversation: row.conversation as ChatMessage[],
+              createdAt:    row.created_at,
+            }))
+          );
+        }
+      });
+  }, [user]);
 
   // ── Check existing session on mount; listen for auth changes ────────────────
   useEffect(() => {

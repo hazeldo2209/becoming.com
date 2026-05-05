@@ -38,6 +38,32 @@ create index if not exists reflections_created_at_idx
   on public.reflections (created_at desc);
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- That's it! Auth (email sign-up, confirmation emails, sign-in, password reset)
+-- 6. AI Plans table (stores each user's action plans / constellations)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists public.ai_plans (
+  id           text        primary key,              -- client-generated (Date.now())
+  user_id      uuid        references auth.users(id) on delete cascade not null,
+  task         text        not null,                 -- original user goal/request
+  tasks        jsonb       not null default '[]',    -- KanbanTask[]
+  conversation jsonb       not null default '[]',    -- ChatMessage[]
+  created_at   timestamptz not null default now()
+);
+
+-- Row Level Security — users can only see and edit their own plans
+alter table public.ai_plans enable row level security;
+
+create policy "Users manage their own plans"
+  on public.ai_plans
+  for all
+  using  (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Index for fast per-user plan lookups sorted by creation time
+create index if not exists ai_plans_user_id_idx
+  on public.ai_plans (user_id, created_at asc);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Auth (email sign-up, confirmation emails, sign-in, password reset)
 -- is handled automatically by Supabase — no extra tables needed.
 -- ─────────────────────────────────────────────────────────────────────────────

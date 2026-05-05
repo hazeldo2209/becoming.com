@@ -5,6 +5,8 @@ import KanbanBoard from './KanbanBoard';
 import ConstellationPlan, { COL_META, STAR_PATH } from './ConstellationPlan';
 import type { KanbanTask, ActionPlan, ChatMessage } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { supabase } from '@/app/lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -89,6 +91,25 @@ function planDominantColor(plan: ActionPlan): string {
   return COL_CHIP[top] ?? '#d4af78';
 }
 
+// ─── Trash icon SVG ───────────────────────────────────────────────────────────
+
+function TrashIcon({ color = '#e07070' }: { color?: string }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+      <path d="M8 2h4M3 5h14M6 5l1 12h6l1-12" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function PencilIcon({ color = '#c4a0e0' }: { color?: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+      <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z"
+        stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 // ─── History drawer ───────────────────────────────────────────────────────────
 
 function HistoryDrawer({
@@ -97,13 +118,38 @@ function HistoryDrawer({
   onNewChat,
   onSelectPlan,
   onClose,
+  onDeletePlan,
+  onRenamePlan,
 }: {
   plans: ActionPlan[];
   activePlanId: string | null;
   onNewChat: () => void;
   onSelectPlan: (id: string) => void;
   onClose: () => void;
+  onDeletePlan: (id: string) => void;
+  onRenamePlan: (id: string, newName: string) => void;
 }) {
+  const [isManaging, setIsManaging]         = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [editingId, setEditingId]           = useState<string | null>(null);
+  const [editName, setEditName]             = useState('');
+
+  const startEdit = (plan: ActionPlan) => {
+    setEditingId(plan.id);
+    setEditName(plan.task);
+    setConfirmDeleteId(null);
+  };
+  const commitEdit = (id: string) => {
+    const trimmed = editName.trim();
+    if (trimmed) onRenamePlan(id, trimmed);
+    setEditingId(null);
+  };
+  const exitManage = () => {
+    setIsManaging(false);
+    setConfirmDeleteId(null);
+    setEditingId(null);
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -131,12 +177,27 @@ function HistoryDrawer({
         exit={{ x: -288 }}
         transition={{ type: 'spring', stiffness: 380, damping: 36 }}
       >
-        {/* Drawer header */}
+        {/* ── Drawer header ── */}
         <div className="flex items-center justify-between px-[20px] pt-[56px] pb-[16px]">
-          <div className="flex items-center gap-[8px]">
-            <p className="text-[18px]">✦</p>
-            <p className="font-bold text-[#f0e6cc] text-[16px] tracking-tight">Becoming AI</p>
-          </div>
+          {isManaging ? (
+            <motion.button
+              className="flex items-center gap-[6px]"
+              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+              whileTap={{ scale: 0.92 }}
+              onClick={exitManage}
+            >
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <path d="M13 4l-7 6 7 6" stroke="#c4a0e0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <p className="text-[#c4a0e0] text-[14px] font-semibold">Done</p>
+            </motion.button>
+          ) : (
+            <div className="flex items-center gap-[8px]">
+              <p className="text-[18px]">✦</p>
+              <p className="font-bold text-[#f0e6cc] text-[16px] tracking-tight">Becoming AI</p>
+            </div>
+          )}
+
           <motion.button
             className="size-[32px] rounded-full flex items-center justify-center"
             style={{ background: 'rgba(255,255,255,0.06)' }}
@@ -147,104 +208,253 @@ function HistoryDrawer({
           </motion.button>
         </div>
 
-        {/* New Chat button */}
-        <div className="px-[16px] pb-[16px]">
-          <motion.button
-            className="w-full h-[44px] rounded-[14px] flex items-center gap-[10px] px-[14px]"
-            style={{
-              background: 'rgba(196,160,224,0.13)',
-              border: '1px solid rgba(196,160,224,0.35)',
-            }}
-            whileHover={{ background: 'rgba(196,160,224,0.20)' }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => { onNewChat(); onClose(); }}
-          >
-            {/* Pencil icon */}
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z"
-                stroke="#c4a0e0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <p className="text-[#c4a0e0] text-[14px] font-semibold">New Chat</p>
-          </motion.button>
-        </div>
+        {/* ── New Chat button (hidden in manage mode) ── */}
+        <AnimatePresence>
+          {!isManaging && (
+            <motion.div
+              className="px-[16px] pb-[16px]"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.button
+                className="w-full h-[44px] rounded-[14px] flex items-center gap-[10px] px-[14px]"
+                style={{
+                  background: 'rgba(196,160,224,0.13)',
+                  border: '1px solid rgba(196,160,224,0.35)',
+                }}
+                whileHover={{ background: 'rgba(196,160,224,0.20)' }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { onNewChat(); onClose(); }}
+              >
+                <PencilIcon />
+                <p className="text-[#c4a0e0] text-[14px] font-semibold">New Chat</p>
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Divider */}
         <div className="mx-[16px] h-[1px] bg-[#1e1e32] mb-[12px]" />
 
-        {/* History list */}
+        {/* ── History list ── */}
         <div className="flex-1 overflow-y-auto px-[16px] pb-[20px]" style={{ scrollbarWidth: 'none' }}>
           {plans.length === 0 ? (
             <div className="flex flex-col items-center justify-center pt-[40px] gap-[10px]">
               <p className="text-[32px] opacity-30">✦</p>
               <p className="text-[#8888a0] text-[13px] text-center leading-relaxed">
-                Your plans will{'\n'}appear here
+                Your constellations will{'\n'}appear here
               </p>
             </div>
           ) : (
             <>
-              <p className="text-[11px] tracking-widest uppercase text-[#555568] mb-[10px] pl-[2px]">
-                Previous Plans
-              </p>
+              {/* Section label + Manage toggle */}
+              <div className="flex items-center justify-between mb-[10px] pl-[2px]">
+                <p className="text-[11px] tracking-widest uppercase text-[#555568]">
+                  {isManaging ? 'Manage Constellations' : 'My Constellations'}
+                </p>
+                {!isManaging && (
+                  <motion.button
+                    className="px-[8px] py-[3px] rounded-[8px]"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => setIsManaging(true)}
+                  >
+                    <p className="text-[11px] text-[#8888a0]">Manage</p>
+                  </motion.button>
+                )}
+              </div>
+
               <div className="space-y-[6px]">
-                {[...plans].reverse().map(plan => {
-                  const color    = planDominantColor(plan);
-                  const done     = plan.tasks.filter(t => t.completed).length;
-                  const total    = plan.tasks.length;
-                  const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
-                  const isActive = plan.id === activePlanId;
-                  const date     = new Date(plan.createdAt).toLocaleDateString('en-US', {
-                    month: 'short', day: 'numeric',
-                  });
+                <AnimatePresence>
+                  {[...plans].reverse().map(plan => {
+                    const color    = planDominantColor(plan);
+                    const done     = plan.tasks.filter(t => t.completed).length;
+                    const total    = plan.tasks.length;
+                    const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
+                    const isActive = plan.id === activePlanId;
+                    const date     = new Date(plan.createdAt).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric',
+                    });
+                    const isConfirmingDelete = confirmDeleteId === plan.id;
+                    const isEditing          = editingId === plan.id;
 
-                  return (
-                    <motion.button
-                      key={plan.id}
-                      className="w-full text-left rounded-[14px] px-[12px] py-[10px] flex flex-col gap-[6px]"
-                      style={{
-                        background: isActive ? `${color}14` : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${isActive ? color + '40' : 'rgba(255,255,255,0.06)'}`,
-                      }}
-                      whileHover={{ background: isActive ? `${color}1e` : 'rgba(255,255,255,0.06)' }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => { onSelectPlan(plan.id); onClose(); }}
-                    >
-                      {/* Goal text */}
-                      <p
-                        className="text-[13px] font-medium leading-snug"
+                    if (isManaging) {
+                      // ── Manage row ──────────────────────────────────────────
+                      return (
+                        <motion.div
+                          key={plan.id}
+                          layout
+                          initial={{ opacity: 0, x: -12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -24, height: 0, marginBottom: 0 }}
+                          transition={{ duration: 0.22 }}
+                          className="rounded-[14px] px-[10px] py-[10px]"
+                          style={{
+                            background: isActive ? `${color}12` : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${isActive ? color + '30' : 'rgba(255,255,255,0.06)'}`,
+                          }}
+                        >
+                          {isConfirmingDelete ? (
+                            /* Delete confirmation row */
+                            <motion.div
+                              className="flex flex-col gap-[8px]"
+                              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            >
+                              <p className="text-[12px] text-[#e07070] leading-snug">
+                                Remove "{plan.task.length > 28 ? plan.task.slice(0, 28) + '…' : plan.task}"?
+                              </p>
+                              <div className="flex gap-[8px]">
+                                <motion.button
+                                  className="flex-1 h-[30px] rounded-[8px] flex items-center justify-center"
+                                  style={{ background: 'rgba(224,112,112,0.18)', border: '1px solid rgba(224,112,112,0.45)' }}
+                                  whileTap={{ scale: 0.96 }}
+                                  onClick={() => {
+                                    onDeletePlan(plan.id);
+                                    setConfirmDeleteId(null);
+                                  }}
+                                >
+                                  <p className="text-[#e07070] text-[12px] font-semibold">Remove</p>
+                                </motion.button>
+                                <motion.button
+                                  className="flex-1 h-[30px] rounded-[8px] flex items-center justify-center"
+                                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}
+                                  whileTap={{ scale: 0.96 }}
+                                  onClick={() => setConfirmDeleteId(null)}
+                                >
+                                  <p className="text-[#8888a0] text-[12px]">Cancel</p>
+                                </motion.button>
+                              </div>
+                            </motion.div>
+                          ) : (
+                            /* Normal manage row */
+                            <div className="flex items-center gap-[8px]">
+                              {/* Rename pencil */}
+                              <motion.button
+                                className="shrink-0 size-[28px] rounded-[8px] flex items-center justify-center"
+                                style={{ background: 'rgba(196,160,224,0.10)', border: '1px solid rgba(196,160,224,0.20)' }}
+                                whileTap={{ scale: 0.88 }}
+                                onClick={() => startEdit(plan)}
+                              >
+                                <PencilIcon />
+                              </motion.button>
+
+                              {/* Name / editable input */}
+                              {isEditing ? (
+                                <input
+                                  autoFocus
+                                  className="flex-1 bg-transparent outline-none text-[13px] text-[#f0e6cc] border-b border-[#c4a0e0] pb-[2px]"
+                                  value={editName}
+                                  onChange={e => setEditName(e.target.value)}
+                                  onBlur={() => commitEdit(plan.id)}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') commitEdit(plan.id);
+                                    if (e.key === 'Escape') setEditingId(null);
+                                  }}
+                                />
+                              ) : (
+                                <p
+                                  className="flex-1 text-[13px] leading-snug"
+                                  style={{
+                                    color: isActive ? color : '#c8c8d8',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                  }}
+                                >
+                                  {plan.task}
+                                </p>
+                              )}
+
+                              {/* Delete trash */}
+                              <motion.button
+                                className="shrink-0 size-[28px] rounded-[8px] flex items-center justify-center"
+                                style={{ background: 'rgba(224,112,112,0.08)', border: '1px solid rgba(224,112,112,0.18)' }}
+                                whileTap={{ scale: 0.88 }}
+                                onClick={() => { setConfirmDeleteId(plan.id); setEditingId(null); }}
+                              >
+                                <TrashIcon />
+                              </motion.button>
+                            </div>
+                          )}
+
+                          {/* Progress bar (compact) — hidden during confirm */}
+                          {!isConfirmingDelete && !isEditing && (
+                            <div className="flex items-center gap-[6px] mt-[6px]">
+                              <div className="flex-1 h-[2px] rounded-full bg-[#1e1e32] overflow-hidden">
+                                <div
+                                  className="h-full rounded-full"
+                                  style={{ backgroundColor: color, width: `${pct}%` }}
+                                />
+                              </div>
+                              <p className="text-[10px] shrink-0 text-[#555568]">{done}/{total} · {date}</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      );
+                    }
+
+                    // ── Normal (non-manage) plan row ──────────────────────────
+                    return (
+                      <motion.button
+                        key={plan.id}
+                        layout
+                        className="w-full text-left rounded-[14px] px-[12px] py-[10px] flex flex-col gap-[6px]"
                         style={{
-                          color: isActive ? color : '#c8c8d8',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
+                          background: isActive ? `${color}14` : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${isActive ? color + '40' : 'rgba(255,255,255,0.06)'}`,
                         }}
+                        whileHover={{ background: isActive ? `${color}1e` : 'rgba(255,255,255,0.06)' }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => { onSelectPlan(plan.id); onClose(); }}
                       >
-                        {plan.task}
-                      </p>
-
-                      {/* Progress row */}
-                      <div className="flex items-center justify-between gap-[8px]">
-                        {/* Progress bar */}
-                        <div className="flex-1 h-[3px] rounded-full bg-[#1e1e32] overflow-hidden">
-                          <motion.div
-                            className="h-full rounded-full"
-                            style={{ backgroundColor: color, width: `${pct}%` }}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${pct}%` }}
-                            transition={{ duration: 0.6, ease: 'easeOut' }}
-                          />
-                        </div>
-                        <p className="text-[11px] shrink-0" style={{ color: '#666680' }}>
-                          {done}/{total} · {date}
+                        <p
+                          className="text-[13px] font-medium leading-snug"
+                          style={{
+                            color: isActive ? color : '#c8c8d8',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {plan.task}
                         </p>
-                      </div>
-                    </motion.button>
-                  );
-                })}
+
+                        <div className="flex items-center justify-between gap-[8px]">
+                          <div className="flex-1 h-[3px] rounded-full bg-[#1e1e32] overflow-hidden">
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: color, width: `${pct}%` }}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.6, ease: 'easeOut' }}
+                            />
+                          </div>
+                          <p className="text-[11px] shrink-0" style={{ color: '#666680' }}>
+                            {done}/{total} · {date}
+                          </p>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
             </>
           )}
         </div>
+
+        {/* ── Manage footer hint (non-manage mode only) ── */}
+        {!isManaging && plans.length > 0 && (
+          <div className="px-[16px] pb-[20px]">
+            <div className="h-[1px] bg-[#1e1e32] mb-[12px]" />
+            <p className="text-[11px] text-[#444458] text-center">
+              Constellations are saved to your account
+            </p>
+          </div>
+        )}
       </motion.div>
     </>
   );
@@ -409,7 +619,12 @@ function ZoomedStarOverlay({
 
 type ViewMode = 'chat' | 'constellation' | 'board';
 
-export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: any) {
+export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, user }: {
+  onNavigate: (screen: string) => void;
+  aiPlans: ActionPlan[];
+  setAiPlans: React.Dispatch<React.SetStateAction<ActionPlan[]>>;
+  user?: User | null;
+}) {
   const { isDark } = useTheme();
   const plans: ActionPlan[] = Array.isArray(aiPlans) ? aiPlans : [];
 
@@ -488,9 +703,48 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [displayMessages.length, isProcessing, view]);
 
+  // ── Supabase persistence helpers ───────────────────────────────────────────
+
+  const savePlanToDb = useCallback(async (plan: ActionPlan) => {
+    if (!user?.id) return;
+    await supabase.from('ai_plans').upsert({
+      id:           plan.id,
+      user_id:      user.id,
+      task:         plan.task,
+      tasks:        plan.tasks        as unknown as object,
+      conversation: plan.conversation ?? [] as unknown as object,
+      created_at:   plan.createdAt,
+    });
+  }, [user]);
+
+  const deletePlanFromDb = useCallback(async (planId: string) => {
+    if (!user?.id) return;
+    await supabase.from('ai_plans').delete().eq('id', planId).eq('user_id', user.id);
+  }, [user]);
+
+  // ── Plan mutation helpers ──────────────────────────────────────────────────
+
   const updatePlan = useCallback((updated: ActionPlan) => {
-    setAiPlans((prev: ActionPlan[]) => prev.map(p => p.id === updated.id ? updated : p));
-  }, [setAiPlans]);
+    setAiPlans(prev => prev.map(p => p.id === updated.id ? updated : p));
+    savePlanToDb(updated);
+  }, [setAiPlans, savePlanToDb]);
+
+  const handleDeletePlan = useCallback((planId: string) => {
+    setAiPlans(prev => prev.filter(p => p.id !== planId));
+    deletePlanFromDb(planId);
+    if (activePlanId === planId) {
+      setActivePlanId(null);
+      setView('chat');
+    }
+  }, [setAiPlans, deletePlanFromDb, activePlanId]);
+
+  const handleRenamePlan = useCallback((planId: string, newName: string) => {
+    setAiPlans(prev => prev.map(p =>
+      p.id === planId ? { ...p, task: newName } : p
+    ));
+    const plan = plans.find(p => p.id === planId);
+    if (plan) savePlanToDb({ ...plan, task: newName });
+  }, [setAiPlans, plans, savePlanToDb]);
 
   const handleNewPlan = () => {
     setActivePlanId(null);
@@ -549,7 +803,8 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
           createdAt: new Date().toISOString(),
           conversation: initConv,
         };
-        setAiPlans((prev: ActionPlan[]) => [...prev, plan]);
+        setAiPlans(prev => [...prev, plan]);
+        savePlanToDb(plan);            // persist to Supabase
         setActivePlanId(plan.id);
         setView('constellation');
       } catch (err: any) {
@@ -670,10 +925,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
             whileTap={{ scale: 0.88 }}
             onClick={handleNewPlan}
           >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z"
-                stroke="#c4a0e0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <PencilIcon />
           </motion.button>
         )}
       </div>
@@ -865,6 +1117,8 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans }: a
             onNewChat={handleNewPlan}
             onSelectPlan={handleSelectPlan}
             onClose={() => setShowDrawer(false)}
+            onDeletePlan={handleDeletePlan}
+            onRenamePlan={handleRenamePlan}
           />
         )}
       </AnimatePresence>

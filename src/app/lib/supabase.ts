@@ -9,6 +9,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type Database = {
   public: {
     Tables: {
+      ai_plans: {
+        Row: {
+          id: string;
+          user_id: string;
+          task: string;
+          tasks: unknown;         // KanbanTask[] stored as JSON
+          conversation: unknown;  // ChatMessage[] stored as JSON
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['ai_plans']['Row'], 'created_at'> & {
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['ai_plans']['Insert']>;
+      };
       reflections: {
         Row: {
           id: string;

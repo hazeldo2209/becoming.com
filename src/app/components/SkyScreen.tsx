@@ -909,10 +909,39 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
         </AnimatePresence>
       </div>
 
-      {/* Sub-view links */}
-      <div className="absolute left-[17px] right-[17px] top-[470px] flex gap-[8px] justify-between items-center">
-        <button className="text-[#d4af78] text-[11px] underline" onClick={() => setView('growth')}>View Journey Timeline</button>
-        <button className="text-[#c4a0e0] text-[11px] underline" onClick={() => setView('weather')}>Emotional Weather</button>
+      {/* Sub-view buttons */}
+      <div className="absolute left-[17px] right-[17px] top-[470px] flex gap-[10px]">
+        {/* Emotional Weather — made prominent */}
+        <motion.button
+          className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
+          style={{
+            background: 'rgba(196,160,224,0.13)',
+            border: '1px solid rgba(196,160,224,0.40)',
+            boxShadow: '0 0 18px rgba(196,160,224,0.10)',
+          }}
+          whileHover={{ scale: 1.02, background: 'rgba(196,160,224,0.20)' }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setView('weather')}
+        >
+          <p className="text-[16px] leading-none">⛅</p>
+          <p className="text-[#c4a0e0] text-[13px] font-semibold">Emotional Weather</p>
+        </motion.button>
+
+        {/* Journey Timeline */}
+        <motion.button
+          className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
+          style={{
+            background: 'rgba(212,175,120,0.10)',
+            border: '1px solid rgba(212,175,120,0.35)',
+            boxShadow: '0 0 18px rgba(212,175,120,0.08)',
+          }}
+          whileHover={{ scale: 1.02, background: 'rgba(212,175,120,0.18)' }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setView('growth')}
+        >
+          <p className="text-[16px] leading-none">✦</p>
+          <p className="text-[#d4af78] text-[13px] font-semibold">My Journey</p>
+        </motion.button>
       </div>
 
       {/* Focus Areas Filter */}

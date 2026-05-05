@@ -4,6 +4,7 @@ import { Starfield, NebulaGlow } from './CosmicElements';
 import type { ActionPlan } from '../types';
 import { supabase } from '@/app/lib/supabase';
 import type { User } from '@supabase/supabase-js';
+import { useTheme } from '../context/ThemeContext';
 
 // ─── Column metadata ──────────────────────────────────────────────────────────
 
@@ -50,10 +51,20 @@ function TaskRow({
   task,
   planName,
   onToggle,
+  taskBg,
+  taskBorder,
+  taskBgDone,
+  textPrimary,
+  textMuted,
 }: {
   task: { id: string; text: string; timeLabel: string; column: string; completed: boolean };
   planName: string;
   onToggle: () => void;
+  taskBg: string;
+  taskBorder: string;
+  taskBgDone: string;
+  textPrimary: string;
+  textMuted: string;
 }) {
   const col = COL_META[task.column] ?? COL_META['this-week'];
   const [leaving, setLeaving] = useState(false);
@@ -73,8 +84,8 @@ function TaskRow({
       transition={{ duration: 0.26 }}
       className="flex items-center gap-[10px] px-[12px] py-[10px] rounded-[12px]"
       style={{
-        background: task.completed ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${task.completed ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'}`,
+        background: task.completed ? taskBgDone : taskBg,
+        border: `1px solid ${task.completed ? taskBgDone : taskBorder}`,
       }}
     >
       <motion.button
@@ -102,14 +113,14 @@ function TaskRow({
         <p
           className="text-[13px] font-medium leading-snug"
           style={{
-            color: task.completed ? '#555568' : '#e8e0d0',
+            color: task.completed ? textMuted : textPrimary,
             textDecoration: task.completed ? 'line-through' : 'none',
           }}
         >
           {task.text}
         </p>
         <div className="flex items-center gap-[5px] mt-[2px]">
-          <p className="text-[11px] text-[#555568]">⏱ {task.timeLabel}</p>
+          <p className="text-[11px]" style={{ color: textMuted }}>⏱ {task.timeLabel}</p>
           <p className="text-[11px]" style={{ color: col.color + 'aa' }}>
             · {planName.length > 20 ? planName.slice(0, 20) + '…' : planName}
           </p>
@@ -138,7 +149,24 @@ export default function TodayScreen({
   userEnergy?: number;
   user?: User | null;
 }) {
+  const { isDark } = useTheme();
   const [doneAnyway, setDoneAnyway] = useState(false);
+
+  // ── Theme tokens ────────────────────────────────────────────────────────────
+  const card      = isDark ? '#0b0a18'               : '#ffffff';
+  const cardBorder= isDark ? '#333333'               : 'rgba(0,0,0,0.10)';
+  const chipBg    = isDark ? '#0b0a18'               : '#f5f0e8';
+  const chipBorder= isDark ? '#333333'               : 'rgba(0,0,0,0.10)';
+  const calInactive= isDark ? '#0b0a18'              : '#f5f0e8';
+  const calBorder = isDark ? '#222222'               : 'rgba(0,0,0,0.10)';
+  const divider   = isDark ? '#333333'               : 'rgba(0,0,0,0.08)';
+  const textPrimary= isDark ? '#f0e6cc'              : '#1a1a2e';
+  const textMuted = isDark ? '#888888'               : '#6b6b80';
+  const screenBg  = isDark ? '#08080f'               : '#f4f0e8';
+  const taskBg    = isDark ? 'rgba(255,255,255,0.04)': 'rgba(0,0,0,0.04)';
+  const taskBorder= isDark ? 'rgba(255,255,255,0.08)': 'rgba(0,0,0,0.08)';
+  const taskBgDone= isDark ? 'rgba(255,255,255,0.02)': 'rgba(0,0,0,0.02)';
+  const progressBg= isDark ? '#1a1a2a'               : 'rgba(0,0,0,0.08)';
 
   const plans: ActionPlan[] = Array.isArray(aiPlans) ? aiPlans : [];
 
@@ -211,7 +239,7 @@ export default function TodayScreen({
   };
 
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+    <div className="overflow-hidden relative rounded-[36px] size-full" style={{ background: screenBg }}>
       <Starfield density={30} />
 
       {/* Status bar */}
@@ -220,9 +248,9 @@ export default function TodayScreen({
       <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
 
       {/* Header */}
-      <p className="absolute font-bold left-[17px] text-[#f0e6cc] text-[24px] top-[55px]">Today</p>
-      <p className="absolute font-normal right-[17px] text-[#888888] text-[13px] top-[62px]">{dateStr}</p>
-      <div className="absolute h-[1px] left-[17px] right-[17px] top-[95px] bg-gradient-to-r from-transparent via-[#333333] to-transparent" />
+      <p className="absolute font-bold left-[17px] text-[24px] top-[55px]" style={{ color: textPrimary }}>Today</p>
+      <p className="absolute font-normal right-[17px] text-[13px] top-[62px]" style={{ color: textMuted }}>{dateStr}</p>
+      <div className="absolute h-[1px] left-[17px] right-[17px] top-[95px]" style={{ background: `linear-gradient(to right, transparent, ${divider}, transparent)` }} />
 
       {/* ── Scrollable content ─────────────────────────────────────────────── */}
       <div
@@ -264,21 +292,21 @@ export default function TodayScreen({
           <NebulaGlow color="gold" className="w-[250px] h-[200px] left-[70px] top-[100px] absolute pointer-events-none" />
 
           <motion.div
-            className="bg-[#0b0a18] border border-[#333333] rounded-[16px] mb-[16px] cursor-pointer overflow-hidden"
-            style={{ height: 160, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
+            className="rounded-[16px] mb-[16px] cursor-pointer overflow-hidden"
+            style={{ height: 160, background: card, border: `1px solid ${cardBorder}`, boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
             whileHover={{ scale: 1.01, borderColor: '#d4af78' }}
             whileTap={{ scale: 0.99 }}
             onClick={() => onNavigate('respond')}
           >
             <div className="absolute h-[4px] left-0 top-0 w-full bg-gradient-to-r from-[#d4af78] via-[#d4af78] to-transparent" />
             <div className="px-[16px] pt-[20px]">
-              <p className="font-bold text-[#888888] text-[12px] tracking-wider mb-[10px]">DAILY PROMPT</p>
-              <p className="font-medium text-[#f0e6cc] text-[16px] leading-[1.4] mb-[14px]">
+              <p className="font-bold text-[12px] tracking-wider mb-[10px]" style={{ color: textMuted }}>DAILY PROMPT</p>
+              <p className="font-medium text-[16px] leading-[1.4] mb-[14px]" style={{ color: textPrimary }}>
                 {`"What's one thing you've been`}{'\n'}{`putting off because of fear?"`}
               </p>
-              <div className="h-[1px] bg-[#222222] mb-[10px]" />
+              <div className="h-[1px] mb-[10px]" style={{ background: cardBorder }} />
               <div className="flex items-center justify-between">
-                <p className="text-[#888888] text-[11px]">✦  Reflect  ·  Take action  ·  Share</p>
+                <p className="text-[11px]" style={{ color: textMuted }}>✦  Reflect  ·  Take action  ·  Share</p>
                 <AnimatePresence mode="wait">
                   {!doneAnyway ? (
                     <motion.button
@@ -312,37 +340,37 @@ export default function TodayScreen({
           </motion.div>
 
           {/* ── Focus Areas ── */}
-          <p className="font-bold text-[#f0e6cc] text-[14px] mb-[8px]">Your Focus Areas</p>
+          <p className="font-bold text-[14px] mb-[8px]" style={{ color: textPrimary }}>Your Focus Areas</p>
           <div className="flex gap-[8px] flex-wrap mb-[16px]">
             {['Career', 'Creativity', 'Connection', 'Health'].map(area => (
-              <div key={area} className="bg-[#0b0a18] border border-[#333333] px-[12px] h-[30px] rounded-[15px] flex items-center">
-                <p className="text-[#888888] text-[12px]">{area}</p>
+              <div key={area} className="px-[12px] h-[30px] rounded-[15px] flex items-center" style={{ background: chipBg, border: `1px solid ${chipBorder}` }}>
+                <p className="text-[12px]" style={{ color: textMuted }}>{area}</p>
               </div>
             ))}
           </div>
 
           {/* ── This Week Calendar ── */}
-          <p className="font-bold text-[#f0e6cc] text-[14px] mb-[8px]">This Week</p>
+          <p className="font-bold text-[14px] mb-[8px]" style={{ color: textPrimary }}>This Week</p>
           <div className="flex gap-[8px] mb-[12px]">
             {weekDays.map((item, idx) => (
               <div
                 key={idx}
                 className="flex-1 h-[52px] rounded-[10px] flex flex-col items-center justify-center border"
                 style={{
-                  background:   item.active ? '#d4af78' : '#0b0a18',
-                  borderColor:  item.active ? '#d4af78' : '#222222',
-                  boxShadow:    item.active ? '0 0 16px rgba(212,175,120,0.3)' : 'none',
+                  background:  item.active ? '#d4af78' : calInactive,
+                  borderColor: item.active ? '#d4af78' : calBorder,
+                  boxShadow:   item.active ? '0 0 16px rgba(212,175,120,0.3)' : 'none',
                 }}
               >
-                <p className={`text-[11px] ${item.active ? 'text-[#08080f]' : 'text-[#888888]'}`}>{item.day}</p>
-                <p className={`text-[13px] font-bold mt-[2px] ${item.active ? 'text-[#08080f]' : 'text-[#f0e6cc]'}`}>{item.date}</p>
+                <p className="text-[11px]" style={{ color: item.active ? '#08080f' : textMuted }}>{item.day}</p>
+                <p className="text-[13px] font-bold mt-[2px]" style={{ color: item.active ? '#08080f' : textPrimary }}>{item.date}</p>
               </div>
             ))}
           </div>
 
           {/* ── Streak banner ── */}
-          <div className="bg-[#0b0a18] border border-[#333333] h-[44px] rounded-[10px] flex items-center px-[16px] mb-[16px]">
-            <p className="text-[#f0e6cc] text-[13px]">
+          <div className="h-[44px] rounded-[10px] flex items-center px-[16px] mb-[16px]" style={{ background: card, border: `1px solid ${cardBorder}` }}>
+            <p className="text-[13px]" style={{ color: textPrimary }}>
               🔥 <span className="text-[#d4af78]">7-day streak</span> · Keep it going!
             </p>
           </div>
@@ -353,12 +381,12 @@ export default function TodayScreen({
 
               {/* Section heading + progress */}
               <div className="flex items-center justify-between mb-[10px]">
-                <p className="font-bold text-[#f0e6cc] text-[14px]">Your Action Tasks</p>
-                <p className="text-[11px] text-[#555568]">{completedCount}/{totalTasks} done</p>
+                <p className="font-bold text-[14px]" style={{ color: textPrimary }}>Your Action Tasks</p>
+                <p className="text-[11px]" style={{ color: textMuted }}>{completedCount}/{totalTasks} done</p>
               </div>
 
               {/* Progress bar */}
-              <div className="h-[3px] rounded-full bg-[#1a1a2a] overflow-hidden mb-[12px]">
+              <div className="h-[3px] rounded-full overflow-hidden mb-[12px]" style={{ background: progressBg }}>
                 <motion.div
                   className="h-full rounded-full"
                   style={{ background: 'linear-gradient(to right, #88c8a8, #d4af78, #c4a0e0)' }}
@@ -379,7 +407,7 @@ export default function TodayScreen({
                   <div className="space-y-[5px]">
                     <AnimatePresence>
                       {doNowTasks.map(t => (
-                        <TaskRow key={`${t.planId}-${t.id}`} task={t} planName={t.planName} onToggle={() => handleToggle(t.planId, t.id)} />
+                        <TaskRow key={`${t.planId}-${t.id}`} task={t} planName={t.planName} onToggle={() => handleToggle(t.planId, t.id)} taskBg={taskBg} taskBorder={taskBorder} taskBgDone={taskBgDone} textPrimary={textPrimary} textMuted={textMuted} />
                       ))}
                     </AnimatePresence>
                   </div>
@@ -397,7 +425,7 @@ export default function TodayScreen({
                   <div className="space-y-[5px]">
                     <AnimatePresence>
                       {thisWeekTasks.map(t => (
-                        <TaskRow key={`${t.planId}-${t.id}`} task={t} planName={t.planName} onToggle={() => handleToggle(t.planId, t.id)} />
+                        <TaskRow key={`${t.planId}-${t.id}`} task={t} planName={t.planName} onToggle={() => handleToggle(t.planId, t.id)} taskBg={taskBg} taskBorder={taskBorder} taskBgDone={taskBgDone} textPrimary={textPrimary} textMuted={textMuted} />
                       ))}
                     </AnimatePresence>
                   </div>
@@ -415,7 +443,7 @@ export default function TodayScreen({
                   <div className="space-y-[5px]">
                     <AnimatePresence>
                       {planAheadTasks.map(t => (
-                        <TaskRow key={`${t.planId}-${t.id}`} task={t} planName={t.planName} onToggle={() => handleToggle(t.planId, t.id)} />
+                        <TaskRow key={`${t.planId}-${t.id}`} task={t} planName={t.planName} onToggle={() => handleToggle(t.planId, t.id)} taskBg={taskBg} taskBorder={taskBorder} taskBgDone={taskBgDone} textPrimary={textPrimary} textMuted={textMuted} />
                       ))}
                     </AnimatePresence>
                   </div>
@@ -427,8 +455,8 @@ export default function TodayScreen({
           {/* ── Quick actions ── */}
           <div className="flex gap-[10px] mt-[4px]">
             <motion.button
-              className="bg-[#0b0a18] border border-[#333333] px-[16px] h-[36px] rounded-[18px] flex items-center cursor-pointer"
-              whileHover={{ scale: 1.02, borderColor: '#c4a0e0' }}
+              className="px-[16px] h-[36px] rounded-[18px] flex items-center cursor-pointer"
+              style={{ background: card, border: `1px solid ${chipBorder}` }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onNavigate('ai')}
             >
@@ -436,8 +464,8 @@ export default function TodayScreen({
             </motion.button>
             {totalTasks === 0 && (
               <motion.button
-                className="bg-[#0b0a18] border border-[#333333] px-[16px] h-[36px] rounded-[18px] flex items-center cursor-pointer"
-                whileHover={{ scale: 1.02, borderColor: '#d4af78' }}
+                className="px-[16px] h-[36px] rounded-[18px] flex items-center cursor-pointer"
+                style={{ background: card, border: `1px solid ${chipBorder}` }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onNavigate('ai')}
               >
@@ -450,7 +478,7 @@ export default function TodayScreen({
       </div>
 
       {/* Bottom nav */}
-      <div className="absolute bg-[#0b0a18] border-t border-[#1a1a1a] flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full">
+      <div className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t" style={{ background: card, borderColor: cardBorder }}>
         <NavIcon type="today"   active={true}  onClick={() => onNavigate('today')}   />
         <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
         <NavIcon type="ai"      active={false} onClick={() => onNavigate('ai')}      />

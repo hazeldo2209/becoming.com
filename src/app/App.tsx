@@ -107,15 +107,15 @@ function AppContent() {
       className="size-full flex items-center justify-center bg-[#08080f]"
       data-theme={isDark ? 'dark' : 'light'}
     >
-      <div className="relative w-full max-w-[390px] h-[844px]">
+      <div className="relative w-full max-w-[390px] h-[844px] overflow-hidden rounded-[36px]">
         <AnimatePresence mode="sync">
           <motion.div
             key={currentScreen}
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.005 }}
-            transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-            className="size-full absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="absolute inset-0"
           >
             <CurrentScreenComponent
               onNavigate={setCurrentScreen}

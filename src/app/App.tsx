@@ -47,9 +47,8 @@ function AppContent() {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
       if (data.user) {
-        // First-time users → onboarding; returning users → check-in
-        const seen = localStorage.getItem(LS_ONBOARDING);
-        setCurrentScreen(seen ? 'checkin' : 'onboarding');
+        // Always show onboarding (skip button available for returning users)
+        setCurrentScreen('onboarding');
       }
       setAuthChecked(true);
     });
@@ -57,10 +56,9 @@ function AppContent() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
-      // After sign-in: first-timers → onboarding, returners → check-in
+      // Always show onboarding after sign-in (skip button available)
       if (u && currentScreen === 'login') {
-        const seen = localStorage.getItem(LS_ONBOARDING);
-        setCurrentScreen(seen ? 'checkin' : 'onboarding');
+        setCurrentScreen('onboarding');
       }
       // Sign-out from any protected screen → back to welcome
       if (!u && currentScreen !== 'welcome' && currentScreen !== 'login' && currentScreen !== 'signup') {

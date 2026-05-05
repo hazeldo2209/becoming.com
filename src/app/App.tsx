@@ -35,7 +35,8 @@ const screens = {
 function AppContent() {
   const { isDark } = useTheme();
   const [currentScreen, setCurrentScreen] = useState('welcome')
-  const [userMood, setUserMood] = useState<string | null>(null);
+  const [userMood, setUserMood]       = useState<string | null>(null);
+  const [userEnergy, setUserEnergy]   = useState<number>(50);
   const [reflections, setReflections] = useState<any[]>([]);
   const [aiTaskBreakdown, setAiTaskBreakdown] = useState<any>(null);
   const [aiPlans, setAiPlans] = useState<ActionPlan[]>([]);
@@ -121,6 +122,8 @@ function AppContent() {
               initialMode={currentScreen === 'signup' ? 'signup' : 'signin'}
               userMood={userMood}
               setUserMood={setUserMood}
+              userEnergy={userEnergy}
+              setUserEnergy={setUserEnergy}
               reflections={reflections}
               setReflections={setReflections}
               aiTaskBreakdown={aiTaskBreakdown}

@@ -41,7 +41,7 @@ const MOODS = [
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function DailyCheckIn({ onNavigate, setUserMood }: any) {
+export default function DailyCheckIn({ onNavigate, setUserMood, setUserEnergy }: any) {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [energy, setEnergy]             = useState(50);
 
@@ -55,6 +55,7 @@ export default function DailyCheckIn({ onNavigate, setUserMood }: any) {
   const handleContinue = () => {
     if (selectedMood) {
       setUserMood(selectedMood);
+      setUserEnergy?.(energy);
       onNavigate('today');
     }
   };

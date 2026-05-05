@@ -147,10 +147,53 @@ function claudeApiPlugin(apiKey: string, supabaseUrl: string, supabaseServiceKey
 
           // ── /api/plan ────────────────────────────────────────────────────
           if (url === '/api/plan') {
-            const userGoal: string = body.goal ?? '';
+            const userGoal: string = body.goal   ?? '';
+            const mood: string     = body.mood   ?? '';
+            const energy: number   = Number(body.energy ?? 50);
+
+            // ── Determine energy tone from mood + energy level ────────────
+            const lowMoods  = ['Drained', 'Heavy', 'Anxious'];
+            const highMoods = ['Good', 'Grateful'];
+            let tone: 'low' | 'medium' | 'full';
+            if (energy < 25 || lowMoods.includes(mood)) {
+              tone = 'low';
+            } else if (energy > 70 || highMoods.includes(mood)) {
+              tone = 'full';
+            } else {
+              tone = 'medium';
+            }
+
+            // ── Tone-specific instructions ────────────────────────────────
+            const toneRules: Record<string, string> = {
+              low: `
+IMPORTANT — the user is having a tough day (mood: ${mood || 'low'}, energy: ${energy}%).
+- Generate EXACTLY 4 tasks
+- ALL tasks must be low-effort (≤15 min). You may include ONE medium task (≤30 min) at most.
+- NO high-effort tasks — zero "high" effort entries, zero substeps
+- Focus on immediate, mood-lifting micro-wins: tiny actions they can complete RIGHT NOW to feel a small sense of progress
+- Task titles should feel gentle, kind, and encouraging — not demanding or overwhelming
+- At least 2 tasks must be under 10 minutes
+- Prioritise doing over planning`,
+
+              medium: `
+The user is in a moderate state (mood: ${mood || 'neutral'}, energy: ${energy}%).
+- Generate exactly 5 tasks
+- Mostly low and medium effort — at most 1 high-effort task (if included, it must have substeps)
+- Include at least 2 quick wins (low effort, ≤15 min) to build momentum
+- Keep the overall plan achievable in a few sessions`,
+
+              full: `
+The user is in great shape (mood: ${mood || 'good'}, energy: ${energy}%).
+- Generate exactly 6 tasks spanning the full effort spectrum
+- Include 1–2 high-effort tasks with substeps — be ambitious
+- Mix immediate quick wins with meaningful longer-term milestones
+- Match the user's energy: make the plan feel exciting and worthwhile`,
+            };
 
             const systemPrompt = `You are a personal growth coach and productivity expert.
-The user will share a goal or challenge. Break it down into exactly 6 concrete, actionable tasks.
+The user will share a goal or challenge. Break it down into concrete, actionable tasks.
+
+${toneRules[tone]}
 
 Return ONLY valid JSON — no markdown, no explanation — matching this schema:
 [
@@ -164,13 +207,12 @@ Return ONLY valid JSON — no markdown, no explanation — matching this schema:
   }
 ]
 
-Rules:
+Base rules:
 - effort "low" = ≤15 min quick win; "medium" = 20–60 min; "high" = >60 min
 - timeMinutes must match timeLabel (5→"5 min", 30→"30 min", 60→"1 hr", 120→"2 hrs")
-- Include 2–3 low-effort tasks, 2 medium, 1–2 high
 - Tasks should build on each other in a logical sequence
 - Be specific and actionable for THIS exact goal, not generic advice
-- For every high-effort task, include a "substeps" array of exactly 3 short action phrases (max 6 words each) that break the task into smaller milestones
+- For every high-effort task, include a "substeps" array of exactly 3 short action phrases (max 6 words each)
 - Low and medium effort tasks must NOT have a "substeps" field`;
 
             const message = await client.messages.create({

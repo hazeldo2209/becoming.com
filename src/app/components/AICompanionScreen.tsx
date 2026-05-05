@@ -13,10 +13,18 @@ import type { User } from '@supabase/supabase-js';
 const CLAIMED_COLOR = '#f0e6cc';
 const CLAIMED_GLOW  = 'rgba(240,230,204,0.95)';
 
-const WELCOME: ChatMessage = {
-  type: 'ai',
-  text: "Hi! I'm here to help you take action on what matters to you. What's something you'd like to work on?",
-};
+// Mood-aware welcome message
+function getMoodWelcome(mood?: string | null): ChatMessage {
+  const lowMoods = ['Drained', 'Heavy', 'Anxious'];
+  const midMoods = ['Meh', 'Neutral', 'Okay-ish'];
+  if (mood && lowMoods.includes(mood)) {
+    return { type: 'ai', text: "Hey — today sounds heavy, and that's okay. Let's start really small. What's one tiny thing you'd like to nudge forward?" };
+  }
+  if (mood && midMoods.includes(mood)) {
+    return { type: 'ai', text: "Hi! Sometimes just a little progress is all we need. What's something you'd like to move forward on today?" };
+  }
+  return { type: 'ai', text: "Hi! I'm here to help you take action on what matters to you. What's something you'd like to work on?" };
+}
 
 // ─── Satellite positions (fullscreen zoom canvas, 300×300) ───────────────────
 
@@ -28,11 +36,11 @@ const FULL_SAT = [
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
-async function buildPlanFromAI(userGoal: string): Promise<KanbanTask[]> {
+async function buildPlanFromAI(userGoal: string, mood?: string | null, energy?: number): Promise<KanbanTask[]> {
   const res = await fetch('/api/plan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ goal: userGoal }),
+    body: JSON.stringify({ goal: userGoal, mood: mood ?? '', energy: energy ?? 50 }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' }));
@@ -619,11 +627,13 @@ function ZoomedStarOverlay({
 
 type ViewMode = 'chat' | 'constellation' | 'board';
 
-export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, user }: {
+export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, user, userMood, userEnergy }: {
   onNavigate: (screen: string) => void;
   aiPlans: ActionPlan[];
   setAiPlans: React.Dispatch<React.SetStateAction<ActionPlan[]>>;
   user?: User | null;
+  userMood?: string | null;
+  userEnergy?: number;
 }) {
   const { isDark } = useTheme();
   const plans: ActionPlan[] = Array.isArray(aiPlans) ? aiPlans : [];
@@ -685,7 +695,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
   const [activePlanId, setActivePlanId] = useState<string | null>(
     plans.length > 0 ? plans[plans.length - 1].id : null
   );
-  const [newModeMessages, setNewModeMessages] = useState<ChatMessage[]>([WELCOME]);
+  const [newModeMessages, setNewModeMessages] = useState<ChatMessage[]>(() => [getMoodWelcome(userMood)]);
   const [userInput, setUserInput]   = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [view, setView]             = useState<ViewMode>('chat');
@@ -787,7 +797,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
         { type: 'ai', text: 'Mapping your constellation…' },
       ]);
       try {
-        const tasks = await buildPlanFromAI(msg);
+        const tasks = await buildPlanFromAI(msg, userMood, userEnergy);
         const initConv: ChatMessage[] = [
           { type: 'user', text: msg },
           {

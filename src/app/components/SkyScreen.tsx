@@ -691,7 +691,7 @@ function NavIcon({ type, active, onClick }: any) {
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans }: any) {
+export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans, userMood }: any) {
   const plans: ActionPlan[] = Array.isArray(aiPlans) ? aiPlans : [];
 
   const [selectedStar, setSelectedStar]     = useState<number | null>(null);
@@ -764,7 +764,7 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
 
   if (view === 'constellation') return <ConstellationDetailScreen constellation={constellationData} onBack={() => setView('main')} />;
   if (view === 'growth')        return <SkyGrowthScreen onBack={() => setView('main')} />;
-  if (view === 'weather')       return <EmotionalWeatherScreen onBack={() => setView('main')} onNavigate={onNavigate} />;
+  if (view === 'weather')       return <EmotionalWeatherScreen onBack={() => setView('main')} onNavigate={onNavigate} userMood={userMood} />;
 
   if (view === 'aiTask') {
     const currentPlan = plans.find((p) => p.id === selectedPlanId) ?? plans[plans.length - 1];
@@ -909,157 +909,149 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
         </AnimatePresence>
       </div>
 
-      {/* Sub-view buttons */}
-      <div className="absolute left-[17px] right-[17px] top-[470px] flex gap-[10px]">
-        {/* Emotional Weather — made prominent */}
-        <motion.button
-          className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
-          style={{
-            background: 'rgba(196,160,224,0.13)',
-            border: '1px solid rgba(196,160,224,0.40)',
-            boxShadow: '0 0 18px rgba(196,160,224,0.10)',
-          }}
-          whileHover={{ scale: 1.02, background: 'rgba(196,160,224,0.20)' }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => setView('weather')}
-        >
-          <p className="text-[16px] leading-none">⛅</p>
-          <p className="text-[#c4a0e0] text-[13px] font-semibold">Emotional Weather</p>
-        </motion.button>
+      {/* ── Scrollable section below the sky canvas ──────────────────── */}
+      <div
+        className="absolute left-0 right-0 top-[458px] bottom-[90px] overflow-y-auto"
+        style={{ scrollbarWidth: 'none' }}
+      >
+        <div className="px-[17px] pt-[12px] pb-[24px] flex flex-col gap-[16px]">
 
-        {/* Journey Timeline */}
-        <motion.button
-          className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
-          style={{
-            background: 'rgba(212,175,120,0.10)',
-            border: '1px solid rgba(212,175,120,0.35)',
-            boxShadow: '0 0 18px rgba(212,175,120,0.08)',
-          }}
-          whileHover={{ scale: 1.02, background: 'rgba(212,175,120,0.18)' }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => setView('growth')}
-        >
-          <p className="text-[16px] leading-none">✦</p>
-          <p className="text-[#d4af78] text-[13px] font-semibold">My Journey</p>
-        </motion.button>
-      </div>
-
-      {/* Focus Areas Filter */}
-      <p className="absolute font-bold left-[17px] text-[#f0e6cc] text-[14px] top-[518px]">Filter by Focus</p>
-      <div className="absolute left-[17px] right-[17px] top-[543px] flex gap-[8px] overflow-x-auto py-[12px] -my-[12px]"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', cursor: 'grab' }}>
-        {['All', 'Career', 'Creativity', 'Connection', 'Health'].map((area) => (
-          <motion.button key={area}
-            className={`${selectedFilter === area ? 'bg-[#d4af78] border-[#d4af78]' : 'bg-[#0b0a18] border-[#333333]'} border px-[12px] h-[28px] rounded-[14px] flex items-center gap-[6px] whitespace-nowrap`}
-            whileTap={{ scale: 0.95 }} onClick={() => setSelectedFilter(area)}>
-            {area !== 'All' && <div className="size-[6px] rounded-full" style={{ backgroundColor: selectedFilter === area ? '#08080f' : focusColors[area] }} />}
-            <p className={`text-[12px] font-medium ${selectedFilter === area ? 'text-[#08080f]' : 'text-[#888888]'}`}>{area}</p>
-          </motion.button>
-        ))}
-      </div>
-
-      {/* ── Constellations section header ─────────────────────────────── */}
-      <div className="absolute left-[17px] right-[17px] top-[611px] flex items-center justify-between">
-        <p className="font-bold text-[#f0e6cc] text-[14px]">Your Constellations</p>
-        {plans.length > 0 && (
-          <motion.button
-            className="flex items-center gap-[5px] px-[10px] h-[24px] rounded-[12px] text-[12px] font-medium"
-            style={{ background: 'rgba(196,160,224,0.12)', color: '#c4a0e0', border: '1px solid rgba(196,160,224,0.25)' }}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => setManageOpen(true)}
-          >
-            <span>⊞</span><span>Manage</span>
-          </motion.button>
-        )}
-      </div>
-
-      {/* Constellations scroll */}
-      <div className="absolute left-[17px] top-[636px] right-0 overflow-x-auto py-[12px] -my-[12px]"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', cursor: 'grab' }}>
-        <div className="flex gap-[12px] pb-[8px] pr-[17px]">
-          {plans.map((plan) => {
-            const done    = plan.tasks.filter((t) => t.completed).length;
-            const total   = plan.tasks.length;
-            const allDone = done === total && total > 0;
-            const pColor  = dominantColor(plan.tasks);
-            const shape   = getConstellationForTask(plan.task, plan.id);
-            const previewStars = plan.tasks.slice(0, 6).map((task, i) => ({
-              x: 40 + shape.offsets[i % shape.offsets.length].dx * 0.65,
-              y: 34 + shape.offsets[i % shape.offsets.length].dy * 0.65,
-              color: task.completed ? CLAIMED_COLOR : (COL_COLORS[task.column] ?? pColor),
-              r: (EFFORT_R[task.effort] ?? 3) * 0.55 + (task.completed ? 0.8 : 0),
-              op: task.completed ? 0.9 : 0.4,
-            }));
-            return (
-              <motion.button key={plan.id}
-                className="rounded-[12px] px-[10px] py-[10px] min-w-[170px] text-left"
-                style={{
-                  background: allDone ? 'linear-gradient(135deg, #1e1a0a, #14110a)' : `linear-gradient(135deg, ${pColor}18, ${pColor}08)`,
-                  border: `1.5px solid ${allDone ? CLAIMED_COLOR + '55' : pColor + '44'}`,
-                  boxShadow: allDone ? `0 0 18px rgba(240,230,204,0.15)` : `0 0 14px ${pColor}22`,
-                }}
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                onClick={() => { setSelectedPlanId(plan.id); setView('aiTask'); }}
-                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
-                <svg width="80" height="68" className="mb-[4px]">
-                  {shape.lines.map(([from, to], li) => {
-                    if (from >= previewStars.length || to >= previewStars.length) return null;
-                    const a = previewStars[from], b = previewStars[to];
-                    const bothD = plan.tasks[from]?.completed && plan.tasks[to]?.completed;
-                    return <line key={li} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={bothD ? CLAIMED_COLOR : pColor} strokeWidth={bothD ? 1 : 0.6} opacity={bothD ? 0.45 : 0.2} />;
-                  })}
-                  {previewStars.map((s, si) => (
-                    <circle key={si} cx={s.x} cy={s.y} r={s.r} fill={s.color} opacity={s.op}
-                      style={plan.tasks[si]?.completed ? { filter: `drop-shadow(0 0 3px ${CLAIMED_GLOW})` } : {}} />
-                  ))}
-                </svg>
-                <p className="text-[11px] font-bold mb-[1px]" style={{ color: allDone ? CLAIMED_COLOR : pColor }}>{shape.name}</p>
-                <p className="text-[12px] mb-[3px]" style={{ color: allDone ? '#a09060' : pColor + 'aa' }}>{done}/{total} stars lit {allDone ? '✓' : ''}</p>
-                <p className="text-[12px] italic truncate max-w-[148px]" style={{ color: '#8888a0' }}>{plan.task}</p>
-              </motion.button>
-            );
-          })}
-
-          {[{ name: 'Brave Steps', count: 7, color: '#d4af78' }, { name: 'Creative Sparks', count: 5, color: '#c4a0e0' }].map((c, i) => (
-            <motion.button key={i}
-              className="bg-[#0b0a18] border border-[#333333] rounded-[12px] px-[14px] py-[12px] min-w-[150px]"
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              onClick={() => setView('constellation')}>
-              <p className="text-[20px] mb-[6px]">✦</p>
-              <p className="text-[13px] font-bold mb-[2px]" style={{ color: c.color }}>{c.name}</p>
-              <p className="text-[#888888] text-[12px]">{c.count} entries</p>
-            </motion.button>
-          ))}
-
-          {plans.length === 0 && (
+          {/* Sub-view buttons */}
+          <div className="flex gap-[10px]">
             <motion.button
-              className="bg-[#0b0a18] border border-dashed border-[#252525] rounded-[12px] px-[14px] py-[12px] min-w-[170px]"
-              whileTap={{ scale: 0.97 }} onClick={() => onNavigate('ai')}>
-              <p className="text-[20px] mb-[6px]">✦</p>
-              <p className="text-[#8888a0] text-[12px] font-medium mb-[2px]">No plans yet</p>
-              <p className="text-[#888] text-[12px]">Go to AI Companion →</p>
+              className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
+              style={{ background: 'rgba(196,160,224,0.13)', border: '1px solid rgba(196,160,224,0.40)', boxShadow: '0 0 18px rgba(196,160,224,0.10)' }}
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setView('weather')}
+            >
+              <p className="text-[16px] leading-none">⛅</p>
+              <p className="text-[#c4a0e0] text-[13px] font-semibold">Emotional Weather</p>
             </motion.button>
-          )}
+            <motion.button
+              className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
+              style={{ background: 'rgba(212,175,120,0.10)', border: '1px solid rgba(212,175,120,0.35)', boxShadow: '0 0 18px rgba(212,175,120,0.08)' }}
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setView('growth')}
+            >
+              <p className="text-[16px] leading-none">✦</p>
+              <p className="text-[#d4af78] text-[13px] font-semibold">My Journey</p>
+            </motion.button>
+          </div>
+
+          {/* Focus Areas Filter */}
+          <div>
+            <p className="font-bold text-[#f0e6cc] text-[14px] mb-[10px]">Filter by Focus</p>
+            <div className="flex gap-[8px] overflow-x-auto pb-[4px]" style={{ scrollbarWidth: 'none' }}>
+              {['All', 'Career', 'Creativity', 'Connection', 'Health'].map((area) => (
+                <motion.button key={area}
+                  className={`${selectedFilter === area ? 'bg-[#d4af78] border-[#d4af78]' : 'bg-[#0b0a18] border-[#333333]'} border px-[12px] h-[28px] rounded-[14px] flex items-center gap-[6px] whitespace-nowrap`}
+                  whileTap={{ scale: 0.95 }} onClick={() => setSelectedFilter(area)}>
+                  {area !== 'All' && <div className="size-[6px] rounded-full" style={{ backgroundColor: selectedFilter === area ? '#08080f' : focusColors[area] }} />}
+                  <p className={`text-[12px] font-medium ${selectedFilter === area ? 'text-[#08080f]' : 'text-[#888888]'}`}>{area}</p>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Constellations */}
+          <div>
+            <div className="flex items-center justify-between mb-[10px]">
+              <p className="font-bold text-[#f0e6cc] text-[14px]">Your Constellations</p>
+              {plans.length > 0 && (
+                <motion.button
+                  className="flex items-center gap-[5px] px-[10px] h-[24px] rounded-[12px] text-[12px] font-medium"
+                  style={{ background: 'rgba(196,160,224,0.12)', color: '#c4a0e0', border: '1px solid rgba(196,160,224,0.25)' }}
+                  whileTap={{ scale: 0.92 }} onClick={() => setManageOpen(true)}
+                ><span>⊞</span><span>Manage</span></motion.button>
+              )}
+            </div>
+            <div className="flex gap-[12px] overflow-x-auto pb-[4px]" style={{ scrollbarWidth: 'none' }}>
+              {plans.map((plan) => {
+                const done    = plan.tasks.filter((t) => t.completed).length;
+                const total   = plan.tasks.length;
+                const allDone = done === total && total > 0;
+                const pColor  = dominantColor(plan.tasks);
+                const shape   = getConstellationForTask(plan.task, plan.id);
+                const previewStars = plan.tasks.slice(0, 6).map((task, i) => ({
+                  x: 40 + shape.offsets[i % shape.offsets.length].dx * 0.65,
+                  y: 34 + shape.offsets[i % shape.offsets.length].dy * 0.65,
+                  color: task.completed ? CLAIMED_COLOR : (COL_COLORS[task.column] ?? pColor),
+                  r: (EFFORT_R[task.effort] ?? 3) * 0.55 + (task.completed ? 0.8 : 0),
+                  op: task.completed ? 0.9 : 0.4,
+                }));
+                return (
+                  <motion.button key={plan.id}
+                    className="rounded-[12px] px-[10px] py-[10px] min-w-[170px] text-left shrink-0"
+                    style={{
+                      background: allDone ? 'linear-gradient(135deg, #1e1a0a, #14110a)' : `linear-gradient(135deg, ${pColor}18, ${pColor}08)`,
+                      border: `1.5px solid ${allDone ? CLAIMED_COLOR + '55' : pColor + '44'}`,
+                      boxShadow: allDone ? `0 0 18px rgba(240,230,204,0.15)` : `0 0 14px ${pColor}22`,
+                    }}
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => { setSelectedPlanId(plan.id); setView('aiTask'); }}
+                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+                    <svg width="80" height="68" className="mb-[4px]">
+                      {shape.lines.map(([from, to], li) => {
+                        if (from >= previewStars.length || to >= previewStars.length) return null;
+                        const a = previewStars[from], b = previewStars[to];
+                        const bothD = plan.tasks[from]?.completed && plan.tasks[to]?.completed;
+                        return <line key={li} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={bothD ? CLAIMED_COLOR : pColor} strokeWidth={bothD ? 1 : 0.6} opacity={bothD ? 0.45 : 0.2} />;
+                      })}
+                      {previewStars.map((s, si) => (
+                        <circle key={si} cx={s.x} cy={s.y} r={s.r} fill={s.color} opacity={s.op}
+                          style={plan.tasks[si]?.completed ? { filter: `drop-shadow(0 0 3px ${CLAIMED_GLOW})` } : {}} />
+                      ))}
+                    </svg>
+                    <p className="text-[11px] font-bold mb-[1px]" style={{ color: allDone ? CLAIMED_COLOR : pColor }}>{shape.name}</p>
+                    <p className="text-[12px] mb-[3px]" style={{ color: allDone ? '#a09060' : pColor + 'aa' }}>{done}/{total} stars lit {allDone ? '✓' : ''}</p>
+                    <p className="text-[12px] italic truncate max-w-[148px]" style={{ color: '#8888a0' }}>{plan.task}</p>
+                  </motion.button>
+                );
+              })}
+
+              {[{ name: 'Brave Steps', count: 7, color: '#d4af78' }, { name: 'Creative Sparks', count: 5, color: '#c4a0e0' }].map((c, i) => (
+                <motion.button key={i}
+                  className="bg-[#0b0a18] border border-[#333333] rounded-[12px] px-[14px] py-[12px] min-w-[150px] shrink-0"
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  onClick={() => setView('constellation')}>
+                  <p className="text-[20px] mb-[6px]">✦</p>
+                  <p className="text-[13px] font-bold mb-[2px]" style={{ color: c.color }}>{c.name}</p>
+                  <p className="text-[#888888] text-[12px]">{c.count} entries</p>
+                </motion.button>
+              ))}
+
+              {plans.length === 0 && (
+                <motion.button
+                  className="bg-[#0b0a18] border border-dashed border-[#252525] rounded-[12px] px-[14px] py-[12px] min-w-[170px] shrink-0"
+                  whileTap={{ scale: 0.97 }} onClick={() => onNavigate('ai')}>
+                  <p className="text-[20px] mb-[6px]">✦</p>
+                  <p className="text-[#8888a0] text-[12px] font-medium mb-[2px]">No plans yet</p>
+                  <p className="text-[#888] text-[12px]">Go to AI Companion →</p>
+                </motion.button>
+              )}
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="bg-[#0b0a18] border border-[#333333] rounded-[12px] px-[12px] py-[12px]">
+            <p className="font-bold text-[#f0e6cc] text-[12px] mb-[6px]">Progress This Month</p>
+            <p className="text-[#888888] text-[11px] mb-[8px]">{`${reflections.length} reflections  ·  ${totalCompleted} actions done  ·  ${plans.length} plans`}</p>
+            <div className="bg-[#1a1a1a] h-[10px] rounded-[5px] w-full relative overflow-hidden">
+              <motion.div className="bg-gradient-to-r from-[#d4af78] to-[#c4a0e0] h-[10px] rounded-[5px] absolute left-0 top-0"
+                initial={{ width: 0 }} animate={{ width: `${Math.min((reflections.length / 12) * 100, 65)}%` }}
+                transition={{ duration: 1, delay: 0.5 }} style={{ boxShadow: '0 0 12px rgba(212,175,120,0.5)' }} />
+            </div>
+          </div>
+
+          {/* Hint */}
+          <motion.div className="bg-[#0b0a18] border border-[#d4af78] rounded-[12px] px-[14px] py-[12px]"
+            style={{ boxShadow: '0 0 20px rgba(212,175,120,0.2)' }} whileHover={{ scale: 1.01 }}>
+            <p className="font-bold text-[#d4af78] text-[13px] mb-[4px]">✦ New constellation forming…</p>
+            <p className="text-[#888888] text-[11px]">3 more entries to unlock "Brave Steps"</p>
+          </motion.div>
+
         </div>
       </div>
-
-      {/* Progress */}
-      <div className="absolute bg-[#0b0a18] border border-[#333333] h-[80px] left-[17px] rounded-[12px] top-[758px] w-[350px] px-[12px] py-[12px]">
-        <p className="font-bold text-[#f0e6cc] text-[12px] mb-[6px]">Progress This Month</p>
-        <p className="text-[#888888] text-[11px] mb-[8px]">{`${reflections.length} reflections  ·  ${totalCompleted} actions done  ·  ${plans.length} plans`}</p>
-        <div className="bg-[#1a1a1a] h-[10px] rounded-[5px] w-full relative overflow-hidden">
-          <motion.div className="bg-gradient-to-r from-[#d4af78] to-[#c4a0e0] h-[10px] rounded-[5px] absolute left-0 top-0"
-            initial={{ width: 0 }} animate={{ width: `${Math.min((reflections.length / 12) * 100, 65)}%` }}
-            transition={{ duration: 1, delay: 0.5 }} style={{ boxShadow: '0 0 12px rgba(212,175,120,0.5)' }} />
-        </div>
-      </div>
-
-      {/* Hint */}
-      <motion.div className="absolute bg-[#0b0a18] border border-[#d4af78] h-[60px] left-[17px] rounded-[12px] top-[858px] w-[350px] px-[14px] py-[12px]"
-        style={{ boxShadow: '0 0 20px rgba(212,175,120,0.2)' }} whileHover={{ scale: 1.01 }}>
-        <p className="font-bold text-[#d4af78] text-[13px] mb-[4px]">✦ New constellation forming…</p>
-        <p className="text-[#888888] text-[11px]">3 more entries to unlock "Brave Steps"</p>
-      </motion.div>
 
       {/* Bottom nav */}
       <div className="absolute bg-[#0b0a18] border-t border-[#1a1a1a] flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full">

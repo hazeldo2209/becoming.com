@@ -12,15 +12,17 @@ import AICompanionScreen from './components/AICompanionScreen';
 import SolidarityScreen from './components/YoureNotAloneScreen';
 import ProfileScreen from './components/ProfileScreen';
 import SharedReflectionsScreen from './components/SharedReflectionsScreen';
+import OnboardingScreen, { LS_ONBOARDING } from './components/OnboardingScreen';
 import type { ActionPlan } from './types';
 import { supabase } from '@/app/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
 const screens = {
-  welcome:  WelcomeScreen,
-  login:    LoginScreen,
-  signup:   LoginScreen,   // same component, opens in signup mode
-  checkin:  DailyCheckIn,
+  welcome:    WelcomeScreen,
+  login:      LoginScreen,
+  signup:     LoginScreen,   // same component, opens in signup mode
+  onboarding: OnboardingScreen,
+  checkin:    DailyCheckIn,
   today: TodayScreen,
   respond: ResponseScreen,
   sky: SkyScreen,
@@ -32,7 +34,7 @@ const screens = {
 
 function AppContent() {
   const { isDark } = useTheme();
-  const [currentScreen, setCurrentScreen] = useState('welcome');
+  const [currentScreen, setCurrentScreen] = useState('welcome')
   const [userMood, setUserMood] = useState<string | null>(null);
   const [reflections, setReflections] = useState<any[]>([]);
   const [aiTaskBreakdown, setAiTaskBreakdown] = useState<any>(null);
@@ -44,16 +46,22 @@ function AppContent() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
-      // If already signed in, jump straight to daily check-in
-      if (data.user) setCurrentScreen('checkin');
+      if (data.user) {
+        // First-time users → onboarding; returning users → check-in
+        const seen = localStorage.getItem(LS_ONBOARDING);
+        setCurrentScreen(seen ? 'checkin' : 'onboarding');
+      }
       setAuthChecked(true);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
-      // Redirect to checkin after a successful sign-in (not when on signup screen)
-      if (u && currentScreen === 'login') setCurrentScreen('checkin');
+      // After sign-in: first-timers → onboarding, returners → check-in
+      if (u && currentScreen === 'login') {
+        const seen = localStorage.getItem(LS_ONBOARDING);
+        setCurrentScreen(seen ? 'checkin' : 'onboarding');
+      }
       // Sign-out from any protected screen → back to welcome
       if (!u && currentScreen !== 'welcome' && currentScreen !== 'login' && currentScreen !== 'signup') {
         setCurrentScreen('welcome');

@@ -74,7 +74,7 @@ export function Starfield({ density = 50, className = '' }: { density?: number; 
   });
 
   return (
-    <div className={`absolute inset-0 overflow-hidden ${className}`}>
+    <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}>
       {stars.map((star, i) => (
         <div
           key={i}

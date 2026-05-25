@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Starfield } from './CosmicElements';
 
@@ -213,29 +213,329 @@ const SLIDES = [
   },
 ];
 
+// ─── Desktop interactive tour ─────────────────────────────────────────────────
+
+const SIDEBAR_W = 216; // matches DesktopLayout w-[216px]
+const TASK_W    = 288; // matches DesktopLayout w-[288px]
+
+// NAV_START: brand block ~90px + divider+mb ~11px = ~101px
+// Each nav item: h-[40px] + space-y-[2px] = 42px
+const NAV_START    = 101;
+const NAV_ITEM_H   = 40;
+const NAV_GAP      = 2;
+
+interface Spot { x: number; y: number; w: number; h: number; r: number }
+
+interface DesktopStep {
+  id: string;
+  title: string;
+  body: string;
+  cta: string;
+  accent: string;
+  spotlight: Spot | null;
+  side: 'center' | 'right-of-sidebar' | 'left-of-tasks';
+}
+
+function buildDesktopSteps(vw: number, vh: number): DesktopStep[] {
+  const aiY = NAV_START + 2 * (NAV_ITEM_H + NAV_GAP); // AI Companion is 3rd nav item (index 2)
+  return [
+    {
+      id: 'welcome',
+      title: 'Welcome to Becoming',
+      body: "You're on the desktop app. Let's take a quick tour so you know exactly where everything lives — it'll take 30 seconds.",
+      cta: 'Take the tour →',
+      accent: '#d4af78',
+      spotlight: null,
+      side: 'center',
+    },
+    {
+      id: 'nav',
+      title: 'Your navigation',
+      body: 'Everything is in this sidebar. Switch between Today, My Sky, AI Companion, Community, and your Profile anytime you like.',
+      cta: 'Next',
+      accent: '#d4af78',
+      spotlight: { x: 0, y: 0, w: SIDEBAR_W, h: vh, r: 0 },
+      side: 'right-of-sidebar',
+    },
+    {
+      id: 'ai',
+      title: '✦ AI Companion',
+      body: 'This is your most powerful tool. Chat with your AI to break any goal into a clear, real action plan — steps you can actually take.',
+      cta: 'Next',
+      accent: '#c4a0e0',
+      spotlight: { x: 8, y: aiY, w: SIDEBAR_W - 16, h: NAV_ITEM_H, r: 10 },
+      side: 'right-of-sidebar',
+    },
+    {
+      id: 'tasks',
+      title: 'Your tasks panel',
+      body: 'Every plan you create with the AI companion appears here automatically. Check off tasks as you go — progress saves to your account.',
+      cta: 'Next',
+      accent: '#88c8a8',
+      spotlight: { x: vw - TASK_W, y: 0, w: TASK_W, h: vh, r: 0 },
+      side: 'left-of-tasks',
+    },
+    {
+      id: 'sky',
+      title: '🌌 My Sky',
+      body: 'Every reflection you write becomes a star. Every plan becomes a constellation. Watch your night sky fill up as you show up for yourself.',
+      cta: 'Next',
+      accent: '#c4a0e0',
+      spotlight: { x: 8, y: NAV_START + 1 * (NAV_ITEM_H + NAV_GAP), w: SIDEBAR_W - 16, h: NAV_ITEM_H, r: 10 },
+      side: 'right-of-sidebar',
+    },
+    {
+      id: 'ready',
+      title: "You're all set ✦",
+      body: "Start with a quick daily check-in to ground yourself for today. It takes under a minute and shapes everything that follows.",
+      cta: "Start my first check-in →",
+      accent: '#d4af78',
+      spotlight: null,
+      side: 'center',
+    },
+  ];
+}
+
+function DesktopTour({ onFinish }: { onFinish: () => void }) {
+  const [stepIdx, setStepIdx] = useState(0);
+  const [vw, setVw] = useState(() => window.innerWidth);
+  const [vh, setVh] = useState(() => window.innerHeight);
+
+  useEffect(() => {
+    const handle = () => { setVw(window.innerWidth); setVh(window.innerHeight); };
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
+
+  const steps = buildDesktopSteps(vw, vh);
+  const s     = steps[stepIdx];
+  const isLast = stepIdx === steps.length - 1;
+
+  const advance = () => {
+    if (isLast) { onFinish(); return; }
+    setStepIdx(i => i + 1);
+  };
+
+  // ── Tooltip card positioning ───────────────────────────────────────────────
+  const CARD_W        = 304;
+  const CARD_H_EST    = 210;
+  const mainCX        = SIDEBAR_W + (vw - SIDEBAR_W - TASK_W) / 2;
+
+  let cardLeft = mainCX - CARD_W / 2;
+  let cardTop  = vh / 2 - CARD_H_EST / 2;
+
+  if (s.side === 'right-of-sidebar') {
+    cardLeft = SIDEBAR_W + 32;
+    // For a small spotlight (single nav item), center card on that item
+    if (s.spotlight && s.spotlight.h < vh / 3) {
+      cardTop = Math.max(24, s.spotlight.y + s.spotlight.h / 2 - CARD_H_EST / 2);
+    }
+  } else if (s.side === 'left-of-tasks') {
+    cardLeft = vw - TASK_W - 36 - CARD_W;
+  }
+
+  // Clamp so card stays in the main content column
+  cardLeft = Math.max(SIDEBAR_W + 16, Math.min(vw - TASK_W - CARD_W - 16, cardLeft));
+  cardTop  = Math.max(24, Math.min(vh - CARD_H_EST - 24, cardTop));
+
+  return (
+    <div className="fixed inset-0 z-[100]">
+      {/* ── SVG dim overlay with spotlight cutout ───────────────────────── */}
+      <svg
+        className="absolute inset-0 pointer-events-none"
+        style={{ width: '100%', height: '100%' }}
+        viewBox={`0 0 ${vw} ${vh}`}
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <mask id="tour-spotlight-mask">
+            <rect width="100%" height="100%" fill="white" />
+            {s.spotlight && (
+              <rect
+                x={s.spotlight.x}
+                y={s.spotlight.y}
+                width={s.spotlight.w}
+                height={s.spotlight.h}
+                rx={s.spotlight.r}
+                ry={s.spotlight.r}
+                fill="black"
+              />
+            )}
+          </mask>
+        </defs>
+        <rect
+          width="100%"
+          height="100%"
+          fill="rgba(4,3,16,0.82)"
+          mask="url(#tour-spotlight-mask)"
+        />
+      </svg>
+
+      {/* ── Animated glow border around spotlight ───────────────────────── */}
+      {s.spotlight && (
+        <motion.div
+          key={s.id + '-ring'}
+          className="absolute pointer-events-none"
+          style={{
+            left:         s.spotlight.x,
+            top:          s.spotlight.y,
+            width:        s.spotlight.w,
+            height:       s.spotlight.h,
+            borderRadius: s.spotlight.r,
+            border:       `1.5px solid ${s.accent}`,
+            boxShadow:    `0 0 20px ${s.accent}55, inset 0 0 12px ${s.accent}18`,
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0.55, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
+
+      {/* ── Tooltip card ─────────────────────────────────────────────────── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={s.id}
+          className="absolute"
+          style={{ left: cardLeft, top: cardTop, width: CARD_W }}
+          initial={{ opacity: 0, y: 14, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.96 }}
+          transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+        >
+          <div
+            className="rounded-[20px] p-[22px] flex flex-col gap-[16px]"
+            style={{
+              background:  'rgba(8,7,22,0.98)',
+              border:      `1px solid ${s.accent}3a`,
+              boxShadow:   `0 0 52px ${s.accent}1a, 0 28px 72px rgba(0,0,0,0.75)`,
+            }}
+          >
+            {/* Progress dots + counter */}
+            <div className="flex items-center gap-[5px]">
+              {steps.map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="h-[3px] rounded-full"
+                  animate={{
+                    width:           i === stepIdx ? 20 : 5,
+                    backgroundColor: i === stepIdx
+                      ? s.accent
+                      : i < stepIdx
+                        ? 'rgba(255,255,255,0.3)'
+                        : 'rgba(255,255,255,0.1)',
+                  }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                />
+              ))}
+              <p className="text-[10px] ml-auto shrink-0 tabular-nums" style={{ color: '#44445a' }}>
+                {stepIdx + 1} / {steps.length}
+              </p>
+            </div>
+
+            {/* Title + body */}
+            <div>
+              <p className="font-bold text-[#f0e6cc] text-[17px] leading-[1.25] mb-[8px]">
+                {s.title}
+              </p>
+              <p className="text-[#8888a0] text-[13px] leading-[1.65]">
+                {s.body}
+              </p>
+            </div>
+
+            {/* CTA button */}
+            <motion.button
+              className="w-full h-[46px] rounded-[23px] font-bold text-[14px] text-[#08080f] cursor-pointer"
+              style={{
+                background:  s.accent,
+                boxShadow:   `0 0 24px ${s.accent}44`,
+              }}
+              whileHover={{ scale: 1.02, boxShadow: `0 0 32px ${s.accent}66` }}
+              whileTap={{ scale: 0.97 }}
+              onClick={advance}
+            >
+              {s.cta}
+            </motion.button>
+
+            {/* Skip link */}
+            {!isLast && (
+              <motion.button
+                className="text-center text-[11px] cursor-pointer"
+                style={{ color: '#3a3a50' }}
+                whileHover={{ color: '#666680' }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onFinish}
+              >
+                Skip tour
+              </motion.button>
+            )}
+          </div>
+
+          {/* Arrow pointer toward spotlight (right-of-sidebar steps only) */}
+          {s.side === 'right-of-sidebar' && s.spotlight && (
+            <motion.div
+              className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ right: '100%', marginRight: 10 }}
+              initial={{ opacity: 0, x: 6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M14 10L4 4v12l10-6z" fill={s.accent} opacity="0.7" />
+              </svg>
+            </motion.div>
+          )}
+
+          {/* Arrow pointer toward tasks panel */}
+          {s.side === 'left-of-tasks' && s.spotlight && (
+            <motion.div
+              className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ left: '100%', marginLeft: 10 }}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M6 10l10-6v12L6 10z" fill={s.accent} opacity="0.7" />
+              </svg>
+            </motion.div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function OnboardingScreen({ onNavigate }: { onNavigate: (screen: string) => void }) {
+export default function OnboardingScreen({ onNavigate, isDesktop }: { onNavigate: (screen: string) => void; isDesktop?: boolean }) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
 
   const slide = SLIDES[slideIndex];
   const isLast = slideIndex === SLIDES.length - 1;
 
+  const handleFinish = () => {
+    localStorage.setItem(LS_ONBOARDING, 'true');
+    onNavigate('checkin');
+  };
+
+  // ── Desktop: full-screen interactive tour overlay ──────────────────────────
+  if (isDesktop) {
+    return <DesktopTour onFinish={handleFinish} />;
+  }
+
+  // ── Mobile: swipeable slideshow ───────────────────────────────────────────
+
   const advance = () => {
     if (isLast) {
-      localStorage.setItem(LS_ONBOARDING, 'true');
-      onNavigate('checkin');
+      handleFinish();
     } else {
       setDirection(1);
       setSlideIndex(i => i + 1);
     }
   };
 
-  const skip = () => {
-    localStorage.setItem(LS_ONBOARDING, 'true');
-    onNavigate('checkin');
-  };
+  const skip = handleFinish;
 
   const Illustration = slide.illustration;
 

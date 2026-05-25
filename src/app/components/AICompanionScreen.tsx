@@ -49,12 +49,20 @@ async function buildPlanFromAI(userGoal: string, mood?: string | null, energy?: 
   return (await res.json()).tasks as KanbanTask[];
 }
 
+type ChatResponse = {
+  reply: string;
+  taskBreakdown?: {
+    originalTaskId: string;
+    newTasks: KanbanTask[];
+  };
+};
+
 async function chatWithAI(
   planGoal: string,
   planTasks: KanbanTask[],
   history: ChatMessage[],
   message: string,
-): Promise<string> {
+): Promise<ChatResponse> {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -64,7 +72,7 @@ async function chatWithAI(
     const err = await res.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(err.error ?? 'Failed to chat');
   }
-  return (await res.json()).reply as string;
+  return await res.json() as ChatResponse;
 }
 
 // ─── Nav icon ─────────────────────────────────────────────────────────────────
@@ -837,13 +845,14 @@ function ManualBuilder({ onSave, onBack }: {
   );
 }
 
-export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, user, userMood, userEnergy }: {
+export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, user, userMood, userEnergy, isDesktop }: {
   onNavigate: (screen: string) => void;
   aiPlans: ActionPlan[];
   setAiPlans: React.Dispatch<React.SetStateAction<ActionPlan[]>>;
   user?: User | null;
   userMood?: string | null;
   userEnergy?: number;
+  isDesktop?: boolean;
 }) {
   const { isDark } = useTheme();
   const plans: ActionPlan[] = Array.isArray(aiPlans) ? aiPlans : [];
@@ -926,8 +935,11 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
   // ── Supabase persistence helpers ───────────────────────────────────────────
 
   const savePlanToDb = useCallback(async (plan: ActionPlan) => {
-    if (!user?.id) return;
-    await supabase.from('ai_plans').upsert({
+    if (!user?.id) {
+      console.warn('[ai_plans save] skipped — no user id');
+      return;
+    }
+    const { error } = await supabase.from('ai_plans').upsert({
       id:           plan.id,
       user_id:      user.id,
       task:         plan.task,
@@ -935,6 +947,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
       conversation: plan.conversation ?? [] as unknown as object,
       created_at:   plan.createdAt,
     });
+    if (error) console.error('[ai_plans save]', error.message, error);
   }, [user]);
 
   const deletePlanFromDb = useCallback(async (planId: string) => {
@@ -1057,11 +1070,30 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
       updatePlan({ ...localPlan, conversation: withUser });
 
       try {
-        const reply = await chatWithAI(localPlan.task, localPlan.tasks, prevConv, msg);
-        updatePlan({
-          ...localPlan,
-          conversation: [...withUser, { type: 'ai', text: reply }],
-        });
+        const response = await chatWithAI(localPlan.task, localPlan.tasks, prevConv, msg);
+
+        if (response.taskBreakdown) {
+          // Replace the original task with the new sub-tasks
+          const { originalTaskId, newTasks } = response.taskBreakdown;
+          const updatedTasks = localPlan.tasks.flatMap(t =>
+            t.id === originalTaskId ? newTasks : [t]
+          );
+          const aiMsg: ChatMessage = {
+            type: 'ai',
+            text: response.reply,
+            taskBreakdown: { originalTaskId, newTaskCount: newTasks.length },
+          };
+          updatePlan({
+            ...localPlan,
+            tasks: updatedTasks,
+            conversation: [...withUser, aiMsg],
+          });
+        } else {
+          updatePlan({
+            ...localPlan,
+            conversation: [...withUser, { type: 'ai', text: response.reply }],
+          });
+        }
       } catch (err: any) {
         updatePlan({
           ...localPlan,
@@ -1086,18 +1118,22 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
 
   return (
     <div
-      className="overflow-hidden relative rounded-[36px] size-full"
+      className={isDesktop ? 'relative size-full flex flex-col' : 'overflow-hidden relative rounded-[36px] size-full'}
       style={{ backgroundColor: T.screenBg }}
     >
       <Starfield density={30} />
       <NebulaGlow color="purple" className="w-[300px] h-[300px] left-[45px] top-[100px]" />
 
-      {/* Status bar */}
-      <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
+      {/* Status bar (mobile only) */}
+      {!isDesktop && (
+        <>
+          <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
+          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
+        </>
+      )}
 
       {/* ── Header bar ────────────────────────────────────────────────────── */}
-      <div className="absolute left-0 right-0 top-[44px] h-[44px] flex items-center justify-between px-[14px] z-10">
+      <div className={`${isDesktop ? 'relative' : 'absolute left-0 right-0 top-[44px]'} h-[44px] flex items-center justify-between px-[14px] z-10 shrink-0`}>
 
         {/* Hamburger button */}
         <motion.button
@@ -1165,14 +1201,14 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
       </div>
 
       <div
-        className="absolute h-[1px] left-[17px] right-[17px] top-[88px] z-10"
+        className={isDesktop ? 'relative h-[1px] mx-[17px] shrink-0' : 'absolute h-[1px] left-[17px] right-[17px] top-[88px] z-10'}
         style={{ background: `linear-gradient(to right, transparent, ${T.headerBorder}, transparent)` }}
       />
 
       {/* ── Content area ─────────────────────────────────────────────────── */}
       <div
         ref={scrollRef}
-        className="absolute left-0 right-0 top-[96px] bottom-[170px] overflow-y-auto px-[17px]"
+        className={isDesktop ? 'flex-1 overflow-y-auto px-[17px]' : 'absolute left-0 right-0 top-[96px] bottom-[170px] overflow-y-auto px-[17px]'}
         style={{ scrollbarWidth: 'none' }}
       >
         <AnimatePresence mode="wait">
@@ -1188,11 +1224,14 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
           {/* CHAT VIEW */}
           {view === 'chat' && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="space-y-[12px] py-[8px]">
+              className={isDesktop ? 'py-[16px]' : 'space-y-[8px] py-[8px]'}>
+
+              {/* Desktop: centered max-width column — Mobile: full width */}
+              <div className={isDesktop ? 'max-w-[680px] mx-auto flex flex-col gap-[8px]' : 'flex flex-col gap-[8px]'}>
 
               {localPlan && !isNewMode && (
                 <motion.div
-                  className="rounded-[12px] px-[12px] py-[8px] mb-[4px]"
+                  className="rounded-[12px] px-[12px] py-[8px]"
                   style={{ background: T.contextBg, border: `1px solid ${T.contextBorder}` }}
                   initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
                 >
@@ -1264,18 +1303,18 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
 
               {displayMessages.map((msg, idx) => (
                 <motion.div key={idx}
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25 }}>
+                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}>
                   {msg.type === 'ai' ? (
                     <div>
                       <div
-                        className="rounded-[18px] max-w-[300px] p-[12px]"
+                        className={`rounded-[18px] p-[12px] ${isDesktop ? 'max-w-[88%]' : 'max-w-[300px]'}`}
                         style={{
                           background: T.aiBubbleBg,
                           border:     T.aiBubbleBorder,
                           boxShadow:  T.aiBubbleShadow,
                         }}>
-                        <p className="text-[14px] leading-[1.6]" style={{ color: T.bubbleText }}>{msg.text}</p>
+                        <p className={`leading-[1.65] ${isDesktop ? 'text-[15px]' : 'text-[14px]'}`} style={{ color: T.bubbleText }}>{msg.text}</p>
                       </div>
                       {msg.planReady && (
                         <motion.button
@@ -1289,12 +1328,37 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
                           <p className="text-[#c4a0e0] text-[13px] font-bold">Open Constellation</p>
                         </motion.button>
                       )}
+                      {msg.taskBreakdown && (
+                        <motion.div
+                          className="mt-[8px] flex gap-[6px]"
+                          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.2 }}>
+                          <motion.button
+                            className="flex items-center gap-[6px] px-[12px] h-[32px] rounded-[16px]"
+                            style={{ background: 'rgba(136,200,168,0.14)', border: '1px solid rgba(136,200,168,0.40)' }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => setView('board')}>
+                            <span className="text-[11px]">⬛</span>
+                            <p className="text-[#88c8a8] text-[12px] font-semibold">
+                              View board ({msg.taskBreakdown.newTaskCount} tasks)
+                            </p>
+                          </motion.button>
+                          <motion.button
+                            className="flex items-center gap-[6px] px-[12px] h-[32px] rounded-[16px]"
+                            style={{ background: T.accentBg2, border: T.accentBorder2 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => setView('constellation')}>
+                            <span className="text-[10px]">✦</span>
+                            <p className="text-[#c4a0e0] text-[12px] font-semibold">See stars</p>
+                          </motion.button>
+                        </motion.div>
+                      )}
                     </div>
                   ) : (
                     <div className="flex justify-end">
-                      <div className="rounded-[18px] max-w-[270px] p-[12px]"
+                      <div className={`rounded-[18px] p-[12px] ${isDesktop ? 'max-w-[72%]' : 'max-w-[270px]'}`}
                         style={{ background: T.userBubbleBg, border: `1px solid ${T.userBubbleBorder}` }}>
-                        <p className="text-[14px] leading-[1.6]" style={{ color: T.bubbleText }}>{msg.text}</p>
+                        <p className={`leading-[1.65] ${isDesktop ? 'text-[15px]' : 'text-[14px]'}`} style={{ color: T.bubbleText }}>{msg.text}</p>
                       </div>
                     </div>
                   )}
@@ -1317,6 +1381,8 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
                   </div>
                 </motion.div>
               )}
+
+              </div>{/* end centered column */}
             </motion.div>
           )}
 
@@ -1363,7 +1429,10 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
 
       {/* Privacy label */}
       {view !== 'manual' && (
-        <div className="absolute left-[17px] bottom-[160px] flex items-center gap-[5px]">
+        <div
+          className="flex items-center gap-[5px] px-[17px] py-[6px] shrink-0"
+          style={isDesktop ? {} : { position: 'absolute', left: 0, bottom: 160 }}
+        >
           <p className="text-[10px]" style={{ color: isDark ? '#444458' : '#7a8fa0' }}>
             🔒 Your reflections are private and never shared
           </p>
@@ -1372,9 +1441,12 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
 
       {/* Input row */}
       {view !== 'manual' && (
-      <div className="absolute left-[17px] bottom-[106px] flex gap-[6px]">
+      <div
+        className="flex gap-[6px] px-[17px] py-[12px] shrink-0"
+        style={isDesktop ? {} : { position: 'absolute', left: 0, right: 0, bottom: 106 }}
+      >
         <div
-          className="h-[48px] rounded-[24px] w-[295px] flex items-center px-[18px]"
+          className={`h-[48px] rounded-[24px] flex items-center px-[18px] ${isDesktop ? 'flex-1' : 'w-[295px]'}`}
           style={{ background: isDark ? '#0b0a18' : '#ffffff', border: `1px solid ${isDark ? '#333333' : 'rgba(92,58,122,0.2)'}` }}
         >
           <input
@@ -1388,7 +1460,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
           />
         </div>
         <motion.button
-          className="rounded-[24px] size-[48px] flex items-center justify-center cursor-pointer"
+          className="rounded-[24px] size-[48px] flex items-center justify-center cursor-pointer shrink-0"
           style={{ background: T.sendBg, boxShadow: T.sendShadow }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -1399,17 +1471,21 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
       </div>
       )}
 
-      {/* Bottom nav */}
-      <div
-        className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t"
-        style={{ backgroundColor: isDark ? '#0b0a18' : '#f4f0e8', borderColor: isDark ? '#1a1a1a' : 'rgba(92,58,122,0.12)' }}
-      >
-        <NavIcon type="today"   active={false} onClick={() => onNavigate('today')}   />
-        <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
-        <NavIcon type="ai"      active={true}  onClick={() => onNavigate('ai')}      />
-        <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
-      </div>
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+      {/* Bottom nav (mobile only) */}
+      {!isDesktop && (
+        <>
+          <div
+            className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t"
+            style={{ backgroundColor: isDark ? '#0b0a18' : '#f4f0e8', borderColor: isDark ? '#1a1a1a' : 'rgba(92,58,122,0.12)' }}
+          >
+            <NavIcon type="today"   active={false} onClick={() => onNavigate('today')}   />
+            <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
+            <NavIcon type="ai"      active={true}  onClick={() => onNavigate('ai')}      />
+            <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
+          </div>
+          <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+        </>
+      )}
 
       {/* History drawer (slides in over everything) */}
       <AnimatePresence>

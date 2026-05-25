@@ -113,11 +113,11 @@ function ReflectionModal({ reflection, onClose }: { reflection: Reflection; onCl
   );
 }
 
-export default function SharedReflectionsScreen({ onNavigate }: any) {
+export default function SharedReflectionsScreen({ onNavigate, isDesktop }: any) {
   const [selectedReflection, setSelectedReflection] = useState<Reflection | null>(null);
 
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+    <div className={isDesktop ? 'bg-[#08080f] relative size-full' : 'bg-[#08080f] overflow-hidden relative rounded-[36px] size-full'}>
       <Starfield density={40} />
 
       {/* Large galaxy clusters */}
@@ -125,10 +125,14 @@ export default function SharedReflectionsScreen({ onNavigate }: any) {
       <NebulaGlow color="gold" className="w-[350px] h-[350px] right-[-60px] top-[300px]" />
       <NebulaGlow color="purple" className="w-[300px] h-[300px] left-[80px] top-[450px]" />
 
-      {/* Status bar */}
-      <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-      <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
+      {/* Status bar (mobile only) */}
+      {!isDesktop && (
+        <>
+          <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
+          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
+          <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
+        </>
+      )}
 
       {/* Header */}
       <motion.button
@@ -153,19 +157,33 @@ export default function SharedReflectionsScreen({ onNavigate }: any) {
       </motion.p>
 
       {/* Galaxy of stars */}
-      <div className="absolute left-0 top-[100px] bottom-[90px] w-full">
-        {mockReflections.map((reflection) => (
-          <Star
-            key={reflection.id}
-            reflection={reflection}
-            onClick={() => setSelectedReflection(reflection)}
-          />
-        ))}
-      </div>
+      {isDesktop ? (
+        <div className="absolute left-0 right-0 top-[140px] bottom-[72px] flex justify-center overflow-hidden">
+          <div className="relative" style={{ width: '400px', flexShrink: 0 }}>
+            {mockReflections.map((reflection) => (
+              <Star
+                key={reflection.id}
+                reflection={reflection}
+                onClick={() => setSelectedReflection(reflection)}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="absolute left-0 top-[100px] bottom-[90px] w-full">
+          {mockReflections.map((reflection) => (
+            <Star
+              key={reflection.id}
+              reflection={reflection}
+              onClick={() => setSelectedReflection(reflection)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Reflection counter */}
       <motion.div
-        className="absolute left-[17px] right-[17px] bottom-[106px] bg-[#0b0a18] border border-[#333333] rounded-[12px] h-[48px] flex items-center justify-center z-10"
+        className={`absolute left-[17px] right-[17px] ${isDesktop ? 'bottom-[16px]' : 'bottom-[106px]'} bg-[#0b0a18] border border-[#333333] rounded-[12px] h-[48px] flex items-center justify-center z-10`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
@@ -176,7 +194,7 @@ export default function SharedReflectionsScreen({ onNavigate }: any) {
       </motion.div>
 
       {/* Home indicator */}
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px] z-10" />
+      {!isDesktop && <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px] z-10" />}
 
       {/* Modal */}
       <AnimatePresence>

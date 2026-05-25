@@ -51,6 +51,10 @@ export interface ChatMessage {
   type: 'user' | 'ai';
   text: string;
   planReady?: boolean;        // true = "plan generated" message
+  taskBreakdown?: {           // set when AI broke down a task
+    originalTaskId: string;
+    newTaskCount: number;
+  };
 }
 
 /** An AI-generated action plan attached to a reflection theme */

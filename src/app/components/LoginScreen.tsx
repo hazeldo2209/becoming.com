@@ -72,7 +72,7 @@ function StarCheckbox({ checked, onToggle, label }: { checked: boolean; onToggle
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-export default function LoginScreen({ onNavigate, initialMode }: any) {
+export default function LoginScreen({ onNavigate, initialMode, isDesktop }: any) {
   const [mode, setMode] = useState<Mode>(initialMode ?? 'signin');
 
   // ── Remember-username state: initialise once from localStorage ──────────────
@@ -165,12 +165,16 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
   };
 
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+    <div className={isDesktop ? 'bg-[#08080f] overflow-hidden relative size-full' : 'bg-[#08080f] overflow-hidden relative rounded-[36px] size-full'}>
       <Starfield density={60} />
 
-      {/* Status bar */}
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-      <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
+      {/* Status bar (mobile only) */}
+      {!isDesktop && (
+        <>
+          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
+          <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
+        </>
+      )}
 
       {/* Back button */}
       <motion.button
@@ -430,8 +434,8 @@ export default function LoginScreen({ onNavigate, initialMode }: any) {
         )}
       </AnimatePresence>
 
-      {/* Home indicator */}
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+      {/* Home indicator (mobile only) */}
+      {!isDesktop && <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />}
     </div>
   );
 }

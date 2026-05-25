@@ -2,19 +2,23 @@ import { motion } from 'motion/react';
 import { Starfield, NebulaGlow } from './CosmicElements';
 import svgPaths from '../../imports/svg-enakyo375k';
 
-export default function WelcomeScreen({ onNavigate }: any) {
+export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+    <div className={isDesktop ? 'bg-[#08080f] overflow-hidden relative size-full' : 'bg-[#08080f] overflow-hidden relative rounded-[36px] size-full'}>
       {/* Starfield */}
       <Starfield density={80} />
 
-      {/* Status bar */}
-      <div className="absolute h-[44px] left-0 top-0 w-full z-10" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-      <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▊▊</p>
+      {/* Status bar (mobile only) */}
+      {!isDesktop && (
+        <>
+          <div className="absolute h-[44px] left-0 top-0 w-full z-10" />
+          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
+          <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▊▊</p>
+        </>
+      )}
 
       {/* Nebula glow behind constellation */}
-      <NebulaGlow color="gold" className="w-[300px] h-[300px] left-[45px] top-[220px]" />
+      <NebulaGlow color="gold" className={isDesktop ? "w-[400px] h-[400px] left-1/2 -translate-x-1/2 top-[180px]" : "w-[300px] h-[300px] left-[45px] top-[220px]"} />
 
       {/* IF TOMORROW ENDS label */}
       <motion.p
@@ -28,7 +32,7 @@ export default function WelcomeScreen({ onNavigate }: any) {
 
       {/* Constellation figure */}
       <motion.svg
-        className="absolute left-[-90px] top-[-58px]"
+        className={isDesktop ? "absolute left-1/2 -translate-x-1/2 top-[-58px]" : "absolute left-[-90px] top-[-58px]"}
         width="572"
         height="513"
         viewBox="0 0 572 513"
@@ -214,8 +218,8 @@ export default function WelcomeScreen({ onNavigate }: any) {
         Already have an account?{' '}<span className="text-[#888888]">Sign in →</span>
       </motion.button>
 
-      {/* Home indicator */}
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+      {/* Home indicator (mobile only) */}
+      {!isDesktop && <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />}
     </div>
   );
 }

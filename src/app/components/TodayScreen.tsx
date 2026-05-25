@@ -141,6 +141,7 @@ export default function TodayScreen({
   userMood,
   userEnergy,
   user,
+  isDesktop,
 }: {
   onNavigate: (screen: string) => void;
   aiPlans?: ActionPlan[];
@@ -148,6 +149,7 @@ export default function TodayScreen({
   userMood?: string | null;
   userEnergy?: number;
   user?: User | null;
+  isDesktop?: boolean;
 }) {
   const { isDark } = useTheme();
   const [doneAnyway, setDoneAnyway] = useState(false);
@@ -239,25 +241,49 @@ export default function TodayScreen({
   };
 
   return (
-    <div className="overflow-hidden relative rounded-[36px] size-full" style={{ background: screenBg }}>
+    <div
+      className={isDesktop ? 'relative size-full flex flex-col' : 'overflow-hidden relative rounded-[36px] size-full'}
+      style={{ background: screenBg }}
+    >
       <Starfield density={30} />
 
-      {/* Status bar */}
-      <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent pointer-events-none" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-      <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
+      {/* ── Phone chrome (mobile only) ──────────────────────────────────── */}
+      {!isDesktop && (
+        <>
+          <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent pointer-events-none" />
+          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
+          <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
+        </>
+      )}
 
-      {/* Header */}
-      <p className="absolute font-bold left-[17px] text-[24px] top-[55px]" style={{ color: textPrimary }}>Today</p>
-      <p className="absolute font-normal right-[17px] text-[13px] top-[62px]" style={{ color: textMuted }}>{dateStr}</p>
-      <div className="absolute h-[1px] left-[17px] right-[17px] top-[95px]" style={{ background: `linear-gradient(to right, transparent, ${divider}, transparent)` }} />
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {isDesktop ? (
+        <div className="relative z-10 shrink-0 px-[24px] pt-[24px] pb-[12px] flex items-center justify-between">
+          <p className="font-bold text-[28px]" style={{ color: textPrimary }}>Today</p>
+          <p className="font-normal text-[14px]" style={{ color: textMuted }}>{dateStr}</p>
+        </div>
+      ) : (
+        <>
+          <p className="absolute font-bold left-[17px] text-[24px] top-[55px]" style={{ color: textPrimary }}>Today</p>
+          <p className="absolute font-normal right-[17px] text-[13px] top-[62px]" style={{ color: textMuted }}>{dateStr}</p>
+        </>
+      )}
+
+      {/* Divider */}
+      <div
+        className={isDesktop ? 'relative shrink-0 h-[1px] mx-[24px]' : 'absolute h-[1px] left-[17px] right-[17px] top-[95px]'}
+        style={{ background: `linear-gradient(to right, transparent, ${divider}, transparent)` }}
+      />
+
+      {/* Nebula glow (positioned relative to root, not scroll container) */}
+      <NebulaGlow color="gold" className="w-[250px] h-[200px] left-[70px] top-[150px] pointer-events-none" />
 
       {/* ── Scrollable content ─────────────────────────────────────────────── */}
       <div
-        className="absolute left-0 right-0 top-[103px] bottom-[90px] overflow-y-auto"
+        className={isDesktop ? 'flex-1 overflow-y-auto' : 'absolute left-0 right-0 top-[103px] bottom-[90px] overflow-y-auto'}
         style={{ scrollbarWidth: 'none' }}
       >
-        <div className="px-[17px] pt-[8px] pb-[24px]">
+        <div className={isDesktop ? 'px-[24px] pt-[16px] pb-[32px]' : 'px-[17px] pt-[8px] pb-[24px]'}>
 
           {/* Mood banner (only when check-in done) */}
           {moodEmoji && (
@@ -289,10 +315,8 @@ export default function TodayScreen({
           )}
 
           {/* ── Daily Prompt Card ── */}
-          <NebulaGlow color="gold" className="w-[250px] h-[200px] left-[70px] top-[100px] absolute pointer-events-none" />
-
           <motion.div
-            className="rounded-[16px] mb-[16px] cursor-pointer overflow-hidden"
+            className="relative rounded-[16px] mb-[16px] cursor-pointer overflow-hidden"
             style={{ height: 160, background: card, border: `1px solid ${cardBorder}`, boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
             whileHover={{ scale: 1.01, borderColor: '#d4af78' }}
             whileTap={{ scale: 0.99 }}
@@ -477,14 +501,18 @@ export default function TodayScreen({
         </div>
       </div>
 
-      {/* Bottom nav */}
-      <div className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t" style={{ background: card, borderColor: cardBorder }}>
-        <NavIcon type="today"   active={true}  onClick={() => onNavigate('today')}   />
-        <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
-        <NavIcon type="ai"      active={false} onClick={() => onNavigate('ai')}      />
-        <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
-      </div>
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+      {/* Bottom nav (mobile only) */}
+      {!isDesktop && (
+        <>
+          <div className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t" style={{ background: card, borderColor: cardBorder }}>
+            <NavIcon type="today"   active={true}  onClick={() => onNavigate('today')}   />
+            <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
+            <NavIcon type="ai"      active={false} onClick={() => onNavigate('ai')}      />
+            <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
+          </div>
+          <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+        </>
+      )}
     </div>
   );
 }

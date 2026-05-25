@@ -691,7 +691,7 @@ function NavIcon({ type, active, onClick }: any) {
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans, userMood }: any) {
+export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans, userMood, isDesktop }: any) {
   const plans: ActionPlan[] = Array.isArray(aiPlans) ? aiPlans : [];
 
   const [selectedStar, setSelectedStar]     = useState<number | null>(null);
@@ -774,7 +774,7 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
     };
     if (!currentPlan) {
       return (
-        <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full flex items-center justify-center">
+        <div className={`bg-[#08080f] relative size-full flex items-center justify-center ${isDesktop ? '' : 'overflow-hidden rounded-[36px]'}`}>
           <div className="text-center">
             <p className="text-[#8888a0] text-[14px] mb-[12px]">No plan selected.</p>
             <button className="text-[#c4a0e0] text-[12px]" onClick={() => setView('main')}>← Back</button>
@@ -783,6 +783,28 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
       );
     }
     const planColor = dominantColor(currentPlan.tasks);
+
+    if (isDesktop) {
+      return (
+        <div className="bg-[#08080f] relative size-full overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+          <Starfield density={50} />
+          <NebulaGlow color="purple" className="w-[350px] h-[350px] left-[20px] top-[100px]" />
+          <div className="relative z-[1] max-w-[600px] mx-auto px-[24px] py-[32px]">
+            <motion.button className="flex items-center gap-[8px] mb-[16px] cursor-pointer" whileTap={{ scale: 0.95 }} onClick={() => setView('main')}>
+              <p className="text-[20px]" style={{ color: planColor }}>←</p>
+              <p className="font-bold text-[#f0e6cc] text-[20px]">AI Action Plan</p>
+            </motion.button>
+            <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-[#333333] to-transparent mb-[16px]" />
+            <p className="text-[#8888a0] text-[12px] mb-[8px] italic">"{currentPlan.task}"</p>
+            {currentPlan.tasks.length > 0
+              ? <ConstellationPlan tasks={currentPlan.tasks} onTasksChange={handleTasksChange} compact />
+              : <p className="text-[#8888a0] text-[12px] text-center mt-[40px]">No plan data.</p>
+            }
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
         <Starfield density={50} />
@@ -807,10 +829,265 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
     );
   }
 
-  // ── Main view ──────────────────────────────────────────────────────────────
+  // ── Shared content ─────────────────────────────────────────────────────────
 
   const focusColors: any = { Career: '#d4af78', Creativity: '#c4a0e0', Connection: '#88c8a8', Health: '#f0e6cc' };
   const totalCompleted = plans.reduce((acc, p) => acc + p.tasks.filter((t) => t.completed).length, 0);
+
+  const skyCanvas = (
+    <div className="bg-[#0b0a18] border border-[#333333] rounded-[16px] overflow-hidden relative" style={{ height: '340px' }}>
+      <svg className="absolute inset-0 w-full h-full opacity-8">
+        <defs>
+          <pattern id="skygrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#d4af78" strokeWidth="0.5" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#skygrid)" />
+      </svg>
+      <svg className="absolute top-[8px] right-[8px]" width="86" height="50">
+        <circle cx="6" cy="9"  r="3.5" fill="#88c8a8" opacity="0.85" />
+        <text x="14" y="13"  fill="#9898a8" fontSize="9.5" fontFamily="sans-serif">do-now</text>
+        <circle cx="6" cy="26" r="3.5" fill="#d4af78" opacity="0.85" />
+        <text x="14" y="30"  fill="#9898a8" fontSize="9.5" fontFamily="sans-serif">week</text>
+        <circle cx="6" cy="43" r="3.5" fill="#c4a0e0" opacity="0.85" />
+        <text x="14" y="47"  fill="#9898a8" fontSize="9.5" fontFamily="sans-serif">ahead</text>
+      </svg>
+      <svg className="absolute inset-0 w-full h-full">
+        {plans.length === 0 ? (
+          <>
+            {[{ x: 80, y: 150 }, { x: 140, y: 120 }, { x: 200, y: 170 }, { x: 270, y: 140 }, { x: 310, y: 190 }, { x: 100, y: 230 }, { x: 160, y: 270 }, { x: 230, y: 250 }].map((s, i) => (
+              <motion.circle key={i} cx={s.x} cy={s.y} r="2.2" fill="#d4af78" opacity={0.2}
+                initial={{ scale: 0 }} animate={{ scale: 1 }}
+                transition={{ delay: 0.3 + i * 0.07, duration: 0.4 }} />
+            ))}
+            <text x="175" y="178" textAnchor="middle" fill="#2a2a3a" fontSize="9.5" fontFamily="sans-serif">Create a plan to light your sky</text>
+          </>
+        ) : (
+          plans.slice(0, 6).map((plan, i) => {
+            const pos = PLAN_CENTERS[i % PLAN_CENTERS.length];
+            return (
+              <MiniConstellation key={plan.id} plan={plan} cx={pos.cx} cy={pos.cy} index={i}
+                pulse={showOnboarding}
+                onClick={() => { dismissOnboarding(); setSelectedPlanId(plan.id); setView('aiTask'); }} />
+            );
+          })
+        )}
+      </svg>
+      <AnimatePresence>
+        {showOnboarding && plans.length > 0 && (
+          <motion.div
+            className="absolute left-[12px] bottom-[14px] z-10"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ delay: 1.0, duration: 0.45 }}
+          >
+            <div
+              className="rounded-[12px] px-[12px] py-[9px] flex items-start gap-[8px] max-w-[230px]"
+              style={{ background: 'rgba(14,13,26,0.92)', border: '1px solid rgba(196,160,224,0.35)', boxShadow: '0 4px 18px rgba(196,160,224,0.18)' }}
+            >
+              <p className="text-[11px] leading-[1.5]" style={{ color: '#c4a0e0' }}>✦</p>
+              <div className="flex-1">
+                <p className="text-[#f0e6cc] text-[11px] font-medium leading-[1.4]">Tap a constellation to explore your actions</p>
+                <p className="text-[#8888a0] text-[10px] mt-[2px]">Each star is a task in your plan</p>
+              </div>
+              <motion.button className="text-[#555568] text-[12px] shrink-0 mt-[-1px]" whileTap={{ scale: 0.88 }} onClick={dismissOnboarding}>✕</motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
+  const subViewButtons = (
+    <div className="flex gap-[10px]">
+      <motion.button
+        className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
+        style={{ background: 'rgba(196,160,224,0.13)', border: '1px solid rgba(196,160,224,0.40)', boxShadow: '0 0 18px rgba(196,160,224,0.10)' }}
+        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+        onClick={() => setView('weather')}
+      >
+        <p className="text-[16px] leading-none">⛅</p>
+        <p className="text-[#c4a0e0] text-[13px] font-semibold">Emotional Weather</p>
+      </motion.button>
+      <motion.button
+        className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
+        style={{ background: 'rgba(212,175,120,0.10)', border: '1px solid rgba(212,175,120,0.35)', boxShadow: '0 0 18px rgba(212,175,120,0.08)' }}
+        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+        onClick={() => setView('growth')}
+      >
+        <p className="text-[16px] leading-none">✦</p>
+        <p className="text-[#d4af78] text-[13px] font-semibold">My Journey</p>
+      </motion.button>
+    </div>
+  );
+
+  const filterBar = (
+    <div>
+      <p className="font-bold text-[#f0e6cc] text-[14px] mb-[10px]">Filter by Focus</p>
+      <div className="flex gap-[8px] overflow-x-auto pb-[4px]" style={{ scrollbarWidth: 'none' }}>
+        {['All', 'Career', 'Creativity', 'Connection', 'Health'].map((area) => (
+          <motion.button key={area}
+            className={`${selectedFilter === area ? 'bg-[#d4af78] border-[#d4af78]' : 'bg-[#0b0a18] border-[#333333]'} border px-[12px] h-[28px] rounded-[14px] flex items-center gap-[6px] whitespace-nowrap`}
+            whileTap={{ scale: 0.95 }} onClick={() => setSelectedFilter(area)}>
+            {area !== 'All' && <div className="size-[6px] rounded-full" style={{ backgroundColor: selectedFilter === area ? '#08080f' : focusColors[area] }} />}
+            <p className={`text-[12px] font-medium ${selectedFilter === area ? 'text-[#08080f]' : 'text-[#888888]'}`}>{area}</p>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const constellationsSection = (
+    <div>
+      <div className="flex items-center justify-between mb-[10px]">
+        <p className="font-bold text-[#f0e6cc] text-[14px]">Your Constellations</p>
+        {plans.length > 0 && (
+          <motion.button
+            className="flex items-center gap-[5px] px-[10px] h-[24px] rounded-[12px] text-[12px] font-medium"
+            style={{ background: 'rgba(196,160,224,0.12)', color: '#c4a0e0', border: '1px solid rgba(196,160,224,0.25)' }}
+            whileTap={{ scale: 0.92 }} onClick={() => setManageOpen(true)}
+          ><span>⊞</span><span>Manage</span></motion.button>
+        )}
+      </div>
+      <div className="flex gap-[12px] pb-[4px] -mx-[17px] px-[17px]" style={{ overflowX: 'scroll', scrollbarWidth: 'none' }}>
+        {plans.map((plan) => {
+          const done    = plan.tasks.filter((t) => t.completed).length;
+          const total   = plan.tasks.length;
+          const allDone = done === total && total > 0;
+          const pColor  = dominantColor(plan.tasks);
+          const shape   = getConstellationForTask(plan.task, plan.id);
+          const previewStars = plan.tasks.slice(0, 6).map((task, i) => ({
+            x: 40 + shape.offsets[i % shape.offsets.length].dx * 0.65,
+            y: 34 + shape.offsets[i % shape.offsets.length].dy * 0.65,
+            color: task.completed ? CLAIMED_COLOR : (COL_COLORS[task.column] ?? pColor),
+            r: (EFFORT_R[task.effort] ?? 3) * 0.55 + (task.completed ? 0.8 : 0),
+            op: task.completed ? 0.9 : 0.4,
+          }));
+          return (
+            <motion.button key={plan.id}
+              className="rounded-[12px] px-[10px] py-[10px] min-w-[170px] text-left shrink-0"
+              style={{
+                background: allDone ? 'linear-gradient(135deg, #1e1a0a, #14110a)' : `linear-gradient(135deg, ${pColor}18, ${pColor}08)`,
+                border: `1.5px solid ${allDone ? CLAIMED_COLOR + '55' : pColor + '44'}`,
+                boxShadow: allDone ? `0 0 18px rgba(240,230,204,0.15)` : `0 0 14px ${pColor}22`,
+              }}
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => { setSelectedPlanId(plan.id); setView('aiTask'); }}
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+              <svg width="80" height="68" className="mb-[4px]">
+                {shape.lines.map(([from, to], li) => {
+                  if (from >= previewStars.length || to >= previewStars.length) return null;
+                  const a = previewStars[from], b = previewStars[to];
+                  const bothD = plan.tasks[from]?.completed && plan.tasks[to]?.completed;
+                  return <line key={li} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={bothD ? CLAIMED_COLOR : pColor} strokeWidth={bothD ? 1 : 0.6} opacity={bothD ? 0.45 : 0.2} />;
+                })}
+                {previewStars.map((s, si) => (
+                  <circle key={si} cx={s.x} cy={s.y} r={s.r} fill={s.color} opacity={s.op}
+                    style={plan.tasks[si]?.completed ? { filter: `drop-shadow(0 0 3px ${CLAIMED_GLOW})` } : {}} />
+                ))}
+              </svg>
+              <p className="text-[11px] font-bold mb-[1px]" style={{ color: allDone ? CLAIMED_COLOR : pColor }}>{shape.name}</p>
+              <p className="text-[12px] mb-[3px]" style={{ color: allDone ? '#a09060' : pColor + 'aa' }}>{done}/{total} stars lit {allDone ? '✓' : ''}</p>
+              <p className="text-[12px] italic truncate max-w-[148px]" style={{ color: '#8888a0' }}>{plan.task}</p>
+            </motion.button>
+          );
+        })}
+        {[{ name: 'Brave Steps', count: 7, color: '#d4af78' }, { name: 'Creative Sparks', count: 5, color: '#c4a0e0' }].map((c, i) => (
+          <motion.button key={i}
+            className="bg-[#0b0a18] border border-[#333333] rounded-[12px] px-[14px] py-[12px] min-w-[150px] shrink-0"
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            onClick={() => setView('constellation')}>
+            <p className="text-[20px] mb-[6px]">✦</p>
+            <p className="text-[13px] font-bold mb-[2px]" style={{ color: c.color }}>{c.name}</p>
+            <p className="text-[#888888] text-[12px]">{c.count} entries</p>
+          </motion.button>
+        ))}
+        {plans.length === 0 && (
+          <motion.button
+            className="bg-[#0b0a18] border border-dashed border-[#252525] rounded-[12px] px-[14px] py-[12px] min-w-[170px] shrink-0"
+            whileTap={{ scale: 0.97 }} onClick={() => onNavigate('ai')}>
+            <p className="text-[20px] mb-[6px]">✦</p>
+            <p className="text-[#8888a0] text-[12px] font-medium mb-[2px]">No plans yet</p>
+            <p className="text-[#888] text-[12px]">Go to AI Companion →</p>
+          </motion.button>
+        )}
+      </div>
+    </div>
+  );
+
+  const progressCard = (
+    <div className="bg-[#0b0a18] border border-[#333333] rounded-[12px] px-[12px] py-[12px]">
+      <p className="font-bold text-[#f0e6cc] text-[12px] mb-[6px]">Progress This Month</p>
+      <p className="text-[#888888] text-[11px] mb-[8px]">{`${reflections.length} reflections  ·  ${totalCompleted} actions done  ·  ${plans.length} plans`}</p>
+      <div className="bg-[#1a1a1a] h-[10px] rounded-[5px] w-full relative overflow-hidden">
+        <motion.div className="bg-gradient-to-r from-[#d4af78] to-[#c4a0e0] h-[10px] rounded-[5px] absolute left-0 top-0"
+          initial={{ width: 0 }} animate={{ width: `${Math.min((reflections.length / 12) * 100, 65)}%` }}
+          transition={{ duration: 1, delay: 0.5 }} style={{ boxShadow: '0 0 12px rgba(212,175,120,0.5)' }} />
+      </div>
+    </div>
+  );
+
+  const hintCard = (
+    <motion.div className="bg-[#0b0a18] border border-[#d4af78] rounded-[12px] px-[14px] py-[12px]"
+      style={{ boxShadow: '0 0 20px rgba(212,175,120,0.2)' }} whileHover={{ scale: 1.01 }}>
+      <p className="font-bold text-[#d4af78] text-[13px] mb-[4px]">✦ New constellation forming…</p>
+      <p className="text-[#888888] text-[11px]">3 more entries to unlock "Brave Steps"</p>
+    </motion.div>
+  );
+
+  const modals = (
+    <>
+      <AnimatePresence>
+        {selectedStar !== null && (
+          <StarDetailModal star={starData[selectedStar] || starData[0]} onClose={() => setSelectedStar(null)} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {manageOpen && (
+          <ManageSheet
+            plans={plans}
+            onClose={() => setManageOpen(false)}
+            onUpdatePlan={handleUpdatePlan}
+            onDeletePlan={handleDeletePlan}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
+            onOpenPlan={(id) => { setSelectedPlanId(id); setView('aiTask'); }}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+
+  // ── Desktop layout ─────────────────────────────────────────────────────────
+
+  if (isDesktop) {
+    return (
+      <div className="bg-[#08080f] relative size-full overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        <Starfield density={40} />
+        <NebulaGlow color="purple" className="w-[300px] h-[300px] left-[45px] top-[80px]" />
+        <div className="relative z-[1] max-w-[640px] mx-auto px-[24px] py-[32px] flex flex-col gap-[20px]">
+          {/* Header */}
+          <div className="flex items-baseline gap-[12px]">
+            <p className="font-bold text-[#f0e6cc] text-[28px]">Your Sky</p>
+            <p className="text-[#888888] text-[12px]">
+              {`${reflections.length} stars  ·  ${plans.length} constellation${plans.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+          <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#333333] to-transparent" />
+          {skyCanvas}
+          {subViewButtons}
+          {filterBar}
+          {constellationsSection}
+          {progressCard}
+          {hintCard}
+        </div>
+        {modals}
+      </div>
+    );
+  }
+
+  // ── Mobile layout ──────────────────────────────────────────────────────────
 
   return (
     <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
@@ -829,227 +1106,21 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
 
       <div className="absolute h-[1px] left-[17px] right-[17px] top-[95px] bg-gradient-to-r from-transparent via-[#333333] to-transparent" />
 
-      {/* Big Sky canvas */}
       <NebulaGlow color="purple" className="w-[300px] h-[300px] left-[45px] top-[110px]" />
 
-      <div className="absolute bg-[#0b0a18] border border-[#333333] h-[340px] left-[17px] rounded-[16px] top-[111px] w-[350px] overflow-hidden">
-        <svg className="absolute inset-0 w-full h-full opacity-8">
-          <defs>
-            <pattern id="skygrid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#d4af78" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#skygrid)" />
-        </svg>
-        <g>
-          <svg className="absolute top-[8px] right-[8px]" width="86" height="50">
-            <circle cx="6" cy="9"  r="3.5" fill="#88c8a8" opacity="0.85" />
-            <text x="14" y="13"  fill="#9898a8" fontSize="9.5" fontFamily="sans-serif">do-now</text>
-            <circle cx="6" cy="26" r="3.5" fill="#d4af78" opacity="0.85" />
-            <text x="14" y="30"  fill="#9898a8" fontSize="9.5" fontFamily="sans-serif">week</text>
-            <circle cx="6" cy="43" r="3.5" fill="#c4a0e0" opacity="0.85" />
-            <text x="14" y="47"  fill="#9898a8" fontSize="9.5" fontFamily="sans-serif">ahead</text>
-          </svg>
-        </g>
-        <svg className="absolute inset-0 w-full h-full">
-          {plans.length === 0 ? (
-            <>
-              {[{ x: 80, y: 150 }, { x: 140, y: 120 }, { x: 200, y: 170 }, { x: 270, y: 140 }, { x: 310, y: 190 }, { x: 100, y: 230 }, { x: 160, y: 270 }, { x: 230, y: 250 }].map((s, i) => (
-                <motion.circle key={i} cx={s.x} cy={s.y} r="2.2" fill="#d4af78" opacity={0.2}
-                  initial={{ scale: 0 }} animate={{ scale: 1 }}
-                  transition={{ delay: 0.3 + i * 0.07, duration: 0.4 }} />
-              ))}
-              <text x="175" y="178" textAnchor="middle" fill="#2a2a3a" fontSize="9.5" fontFamily="sans-serif">Create a plan to light your sky</text>
-            </>
-          ) : (
-            plans.slice(0, 6).map((plan, i) => {
-              const pos = PLAN_CENTERS[i % PLAN_CENTERS.length];
-              return (
-                <MiniConstellation key={plan.id} plan={plan} cx={pos.cx} cy={pos.cy} index={i}
-                  pulse={showOnboarding}
-                  onClick={() => { dismissOnboarding(); setSelectedPlanId(plan.id); setView('aiTask'); }} />
-              );
-            })
-          )}
-        </svg>
-
-        {/* First-visit onboarding tooltip */}
-        <AnimatePresence>
-          {showOnboarding && plans.length > 0 && (
-            <motion.div
-              className="absolute left-[12px] bottom-[14px] z-10"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ delay: 1.0, duration: 0.45 }}
-            >
-              <div
-                className="rounded-[12px] px-[12px] py-[9px] flex items-start gap-[8px] max-w-[230px]"
-                style={{
-                  background: 'rgba(14,13,26,0.92)',
-                  border: '1px solid rgba(196,160,224,0.35)',
-                  boxShadow: '0 4px 18px rgba(196,160,224,0.18)',
-                }}
-              >
-                <p className="text-[11px] leading-[1.5]" style={{ color: '#c4a0e0' }}>✦</p>
-                <div className="flex-1">
-                  <p className="text-[#f0e6cc] text-[11px] font-medium leading-[1.4]">
-                    Tap a constellation to explore your actions
-                  </p>
-                  <p className="text-[#8888a0] text-[10px] mt-[2px]">Each star is a task in your plan</p>
-                </div>
-                <motion.button
-                  className="text-[#555568] text-[12px] shrink-0 mt-[-1px]"
-                  whileTap={{ scale: 0.88 }}
-                  onClick={dismissOnboarding}
-                >✕</motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Sky canvas — mobile absolute position */}
+      <div className="absolute left-[17px] top-[111px] w-[350px]">
+        {skyCanvas}
       </div>
 
-      {/* ── Scrollable section below the sky canvas ──────────────────── */}
-      <div
-        className="absolute left-0 right-0 top-[458px] bottom-[90px] overflow-y-auto"
-        style={{ scrollbarWidth: 'none' }}
-      >
+      {/* Scrollable section below canvas */}
+      <div className="absolute left-0 right-0 top-[458px] bottom-[90px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <div className="px-[17px] pt-[12px] pb-[24px] flex flex-col gap-[16px]">
-
-          {/* Sub-view buttons */}
-          <div className="flex gap-[10px]">
-            <motion.button
-              className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
-              style={{ background: 'rgba(196,160,224,0.13)', border: '1px solid rgba(196,160,224,0.40)', boxShadow: '0 0 18px rgba(196,160,224,0.10)' }}
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setView('weather')}
-            >
-              <p className="text-[16px] leading-none">⛅</p>
-              <p className="text-[#c4a0e0] text-[13px] font-semibold">Emotional Weather</p>
-            </motion.button>
-            <motion.button
-              className="flex-1 h-[46px] rounded-[14px] flex items-center justify-center gap-[7px]"
-              style={{ background: 'rgba(212,175,120,0.10)', border: '1px solid rgba(212,175,120,0.35)', boxShadow: '0 0 18px rgba(212,175,120,0.08)' }}
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setView('growth')}
-            >
-              <p className="text-[16px] leading-none">✦</p>
-              <p className="text-[#d4af78] text-[13px] font-semibold">My Journey</p>
-            </motion.button>
-          </div>
-
-          {/* Focus Areas Filter */}
-          <div>
-            <p className="font-bold text-[#f0e6cc] text-[14px] mb-[10px]">Filter by Focus</p>
-            <div className="flex gap-[8px] overflow-x-auto pb-[4px]" style={{ scrollbarWidth: 'none' }}>
-              {['All', 'Career', 'Creativity', 'Connection', 'Health'].map((area) => (
-                <motion.button key={area}
-                  className={`${selectedFilter === area ? 'bg-[#d4af78] border-[#d4af78]' : 'bg-[#0b0a18] border-[#333333]'} border px-[12px] h-[28px] rounded-[14px] flex items-center gap-[6px] whitespace-nowrap`}
-                  whileTap={{ scale: 0.95 }} onClick={() => setSelectedFilter(area)}>
-                  {area !== 'All' && <div className="size-[6px] rounded-full" style={{ backgroundColor: selectedFilter === area ? '#08080f' : focusColors[area] }} />}
-                  <p className={`text-[12px] font-medium ${selectedFilter === area ? 'text-[#08080f]' : 'text-[#888888]'}`}>{area}</p>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Constellations */}
-          <div>
-            <div className="flex items-center justify-between mb-[10px]">
-              <p className="font-bold text-[#f0e6cc] text-[14px]">Your Constellations</p>
-              {plans.length > 0 && (
-                <motion.button
-                  className="flex items-center gap-[5px] px-[10px] h-[24px] rounded-[12px] text-[12px] font-medium"
-                  style={{ background: 'rgba(196,160,224,0.12)', color: '#c4a0e0', border: '1px solid rgba(196,160,224,0.25)' }}
-                  whileTap={{ scale: 0.92 }} onClick={() => setManageOpen(true)}
-                ><span>⊞</span><span>Manage</span></motion.button>
-              )}
-            </div>
-            <div className="flex gap-[12px] overflow-x-auto pb-[4px]" style={{ scrollbarWidth: 'none' }}>
-              {plans.map((plan) => {
-                const done    = plan.tasks.filter((t) => t.completed).length;
-                const total   = plan.tasks.length;
-                const allDone = done === total && total > 0;
-                const pColor  = dominantColor(plan.tasks);
-                const shape   = getConstellationForTask(plan.task, plan.id);
-                const previewStars = plan.tasks.slice(0, 6).map((task, i) => ({
-                  x: 40 + shape.offsets[i % shape.offsets.length].dx * 0.65,
-                  y: 34 + shape.offsets[i % shape.offsets.length].dy * 0.65,
-                  color: task.completed ? CLAIMED_COLOR : (COL_COLORS[task.column] ?? pColor),
-                  r: (EFFORT_R[task.effort] ?? 3) * 0.55 + (task.completed ? 0.8 : 0),
-                  op: task.completed ? 0.9 : 0.4,
-                }));
-                return (
-                  <motion.button key={plan.id}
-                    className="rounded-[12px] px-[10px] py-[10px] min-w-[170px] text-left shrink-0"
-                    style={{
-                      background: allDone ? 'linear-gradient(135deg, #1e1a0a, #14110a)' : `linear-gradient(135deg, ${pColor}18, ${pColor}08)`,
-                      border: `1.5px solid ${allDone ? CLAIMED_COLOR + '55' : pColor + '44'}`,
-                      boxShadow: allDone ? `0 0 18px rgba(240,230,204,0.15)` : `0 0 14px ${pColor}22`,
-                    }}
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => { setSelectedPlanId(plan.id); setView('aiTask'); }}
-                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
-                    <svg width="80" height="68" className="mb-[4px]">
-                      {shape.lines.map(([from, to], li) => {
-                        if (from >= previewStars.length || to >= previewStars.length) return null;
-                        const a = previewStars[from], b = previewStars[to];
-                        const bothD = plan.tasks[from]?.completed && plan.tasks[to]?.completed;
-                        return <line key={li} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={bothD ? CLAIMED_COLOR : pColor} strokeWidth={bothD ? 1 : 0.6} opacity={bothD ? 0.45 : 0.2} />;
-                      })}
-                      {previewStars.map((s, si) => (
-                        <circle key={si} cx={s.x} cy={s.y} r={s.r} fill={s.color} opacity={s.op}
-                          style={plan.tasks[si]?.completed ? { filter: `drop-shadow(0 0 3px ${CLAIMED_GLOW})` } : {}} />
-                      ))}
-                    </svg>
-                    <p className="text-[11px] font-bold mb-[1px]" style={{ color: allDone ? CLAIMED_COLOR : pColor }}>{shape.name}</p>
-                    <p className="text-[12px] mb-[3px]" style={{ color: allDone ? '#a09060' : pColor + 'aa' }}>{done}/{total} stars lit {allDone ? '✓' : ''}</p>
-                    <p className="text-[12px] italic truncate max-w-[148px]" style={{ color: '#8888a0' }}>{plan.task}</p>
-                  </motion.button>
-                );
-              })}
-
-              {[{ name: 'Brave Steps', count: 7, color: '#d4af78' }, { name: 'Creative Sparks', count: 5, color: '#c4a0e0' }].map((c, i) => (
-                <motion.button key={i}
-                  className="bg-[#0b0a18] border border-[#333333] rounded-[12px] px-[14px] py-[12px] min-w-[150px] shrink-0"
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                  onClick={() => setView('constellation')}>
-                  <p className="text-[20px] mb-[6px]">✦</p>
-                  <p className="text-[13px] font-bold mb-[2px]" style={{ color: c.color }}>{c.name}</p>
-                  <p className="text-[#888888] text-[12px]">{c.count} entries</p>
-                </motion.button>
-              ))}
-
-              {plans.length === 0 && (
-                <motion.button
-                  className="bg-[#0b0a18] border border-dashed border-[#252525] rounded-[12px] px-[14px] py-[12px] min-w-[170px] shrink-0"
-                  whileTap={{ scale: 0.97 }} onClick={() => onNavigate('ai')}>
-                  <p className="text-[20px] mb-[6px]">✦</p>
-                  <p className="text-[#8888a0] text-[12px] font-medium mb-[2px]">No plans yet</p>
-                  <p className="text-[#888] text-[12px]">Go to AI Companion →</p>
-                </motion.button>
-              )}
-            </div>
-          </div>
-
-          {/* Progress */}
-          <div className="bg-[#0b0a18] border border-[#333333] rounded-[12px] px-[12px] py-[12px]">
-            <p className="font-bold text-[#f0e6cc] text-[12px] mb-[6px]">Progress This Month</p>
-            <p className="text-[#888888] text-[11px] mb-[8px]">{`${reflections.length} reflections  ·  ${totalCompleted} actions done  ·  ${plans.length} plans`}</p>
-            <div className="bg-[#1a1a1a] h-[10px] rounded-[5px] w-full relative overflow-hidden">
-              <motion.div className="bg-gradient-to-r from-[#d4af78] to-[#c4a0e0] h-[10px] rounded-[5px] absolute left-0 top-0"
-                initial={{ width: 0 }} animate={{ width: `${Math.min((reflections.length / 12) * 100, 65)}%` }}
-                transition={{ duration: 1, delay: 0.5 }} style={{ boxShadow: '0 0 12px rgba(212,175,120,0.5)' }} />
-            </div>
-          </div>
-
-          {/* Hint */}
-          <motion.div className="bg-[#0b0a18] border border-[#d4af78] rounded-[12px] px-[14px] py-[12px]"
-            style={{ boxShadow: '0 0 20px rgba(212,175,120,0.2)' }} whileHover={{ scale: 1.01 }}>
-            <p className="font-bold text-[#d4af78] text-[13px] mb-[4px]">✦ New constellation forming…</p>
-            <p className="text-[#888888] text-[11px]">3 more entries to unlock "Brave Steps"</p>
-          </motion.div>
-
+          {subViewButtons}
+          {filterBar}
+          {constellationsSection}
+          {progressCard}
+          {hintCard}
         </div>
       </div>
 
@@ -1062,27 +1133,7 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
       </div>
       <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
 
-      {/* Star detail modal */}
-      <AnimatePresence>
-        {selectedStar !== null && (
-          <StarDetailModal star={starData[selectedStar] || starData[0]} onClose={() => setSelectedStar(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Manage sheet */}
-      <AnimatePresence>
-        {manageOpen && (
-          <ManageSheet
-            plans={plans}
-            onClose={() => setManageOpen(false)}
-            onUpdatePlan={handleUpdatePlan}
-            onDeletePlan={handleDeletePlan}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-            onOpenPlan={(id) => { setSelectedPlanId(id); setView('aiTask'); }}
-          />
-        )}
-      </AnimatePresence>
+      {modals}
     </div>
   );
 }

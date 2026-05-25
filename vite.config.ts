@@ -264,8 +264,9 @@ Base rules:
             const history: any[]      = body.history   ?? [];
             const userMessage: string = body.message   ?? '';
 
-            const taskSummary = planTasks.map((t: any, i: number) =>
-              `${i + 1}. [${t.completed ? '✓ done' : '○ todo'}] "${t.text}" — ${t.effort} effort, ${t.timeLabel}\n   ${t.details}`
+            // Include task IDs so AI can reference them for breakdowns
+            const taskSummary = planTasks.map((t: any) =>
+              `[id:${t.id}] [${t.completed ? '✓ done' : '○ todo'}] "${t.text}" — ${t.effort} effort, ${t.timeLabel}\n   ${t.details}`
             ).join('\n');
 
             const systemPrompt = `You are a warm, encouraging personal growth coach. The user is working on this goal:
@@ -274,7 +275,32 @@ Base rules:
 Their current action plan:
 ${taskSummary}
 
-Help them with questions about tasks, what to prioritise next, how to approach something, or motivation. Be concise (2–4 sentences) and specific — reference the actual task names when helpful. Never regenerate the full plan unless explicitly asked.`;
+TASK BREAKDOWN CAPABILITY:
+When the user asks you to break down a task, decompose it, split it into smaller steps, or make it more manageable, you MUST respond with ONLY this JSON (no markdown, no extra text):
+{
+  "type": "task_breakdown",
+  "reply": "Friendly 1-2 sentence message confirming what you did",
+  "originalTaskId": "<exact id from [id:X] above>",
+  "newTasks": [
+    {
+      "text": "Short action title (max 8 words)",
+      "details": "One sentence: exactly what to do",
+      "effort": "low",
+      "timeMinutes": 15,
+      "timeLabel": "15 min",
+      "column": "do-now"
+    }
+  ]
+}
+Rules for breakdown tasks:
+- Generate 3–5 concrete sub-tasks that together complete the original task
+- Prefer low and medium effort tasks (keep each under 45 min)
+- column must be one of: "do-now", "this-week", "plan-ahead"
+- effort must be "low" (≤15 min), "medium" (16–60 min), or "high" (>60 min)
+- timeMinutes must match timeLabel exactly
+
+For ALL other requests (questions, motivation, advice), reply with PLAIN TEXT only — no JSON.`;
+
 
             const recentHistory = history.slice(-14);
             const claudeMessages: { role: string; content: string }[] = [];
@@ -294,17 +320,55 @@ Help them with questions about tasks, what to prioritise next, how to approach s
 
             const chatResponse = await client.messages.create({
               model: 'claude-opus-4-7',
-              max_tokens: 512,
+              max_tokens: 1024,
               thinking: { type: 'adaptive' },
               system: systemPrompt,
               messages: claudeMessages as any,
             });
 
             const chatText = chatResponse.content.find((b: any) => b.type === 'text');
-            const reply = (chatText as any)?.text ?? 'Let me think about that…';
+            const rawReply = (chatText as any)?.text ?? 'Let me think about that…';
+
+            // Try to parse as structured task breakdown
+            function derivePriorityFromEffort(effort: string, mins: number) {
+              if (effort === 'low' && mins <= 15) return 'p1';
+              if (effort === 'high' || mins > 60) return 'p3';
+              return 'p2';
+            }
+
+            try {
+              const trimmed = rawReply.trim();
+              if (trimmed.startsWith('{')) {
+                const parsed = JSON.parse(trimmed);
+                if (parsed.type === 'task_breakdown' && parsed.originalTaskId && Array.isArray(parsed.newTasks)) {
+                  const newTasks = parsed.newTasks.map((t: any, i: number) => ({
+                    id: `${parsed.originalTaskId}-${i + 1}-${Date.now()}`,
+                    text: t.text,
+                    details: t.details ?? '',
+                    effort: t.effort ?? 'medium',
+                    timeLabel: t.timeLabel ?? '30 min',
+                    timeMinutes: t.timeMinutes ?? 30,
+                    column: t.column ?? 'this-week',
+                    priority: derivePriorityFromEffort(t.effort ?? 'medium', t.timeMinutes ?? 30),
+                    completed: false,
+                  }));
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({
+                    reply: parsed.reply ?? 'Here are your updated tasks!',
+                    taskBreakdown: {
+                      originalTaskId: parsed.originalTaskId,
+                      newTasks,
+                    },
+                  }));
+                  return;
+                }
+              }
+            } catch (_) {
+              // Not JSON — fall through to plain text reply
+            }
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ reply }));
+            res.end(JSON.stringify({ reply: rawReply }));
             return;
           }
 

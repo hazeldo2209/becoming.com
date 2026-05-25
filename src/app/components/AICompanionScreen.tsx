@@ -845,6 +845,89 @@ function ManualBuilder({ onSave, onBack }: {
   );
 }
 
+// ─── Mini Chat Strip (shown below constellation/board views) ─────────────────
+
+function MiniChatStrip({ messages, isProcessing, isDark, T, onOpenChat }: {
+  messages: ChatMessage[];
+  isProcessing: boolean;
+  isDark: boolean;
+  T: any;
+  onOpenChat: () => void;
+}) {
+  // Skip the initial greeting — only show exchanges after the user typed
+  const conversational = messages.slice(1);
+  const recent = conversational.slice(-3);
+
+  if (recent.length === 0 && !isProcessing) return null;
+
+  return (
+    <motion.div
+      className="mt-[12px] mb-[4px] rounded-[16px] overflow-hidden"
+      style={{ background: isDark ? 'rgba(11,10,24,0.7)' : 'rgba(244,240,232,0.8)', border: `1px solid ${isDark ? '#1e1e2e' : 'rgba(92,58,122,0.15)'}` }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between px-[14px] pt-[10px] pb-[6px]"
+        style={{ borderBottom: `1px solid ${isDark ? '#1e1e2e' : 'rgba(92,58,122,0.1)'}` }}>
+        <div className="flex items-center gap-[6px]">
+          <span className="text-[10px]">💬</span>
+          <p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: isDark ? '#8888a0' : '#6a7a8a' }}>Recent Chat</p>
+        </div>
+        <motion.button
+          className="text-[11px] font-semibold px-[10px] h-[22px] rounded-[11px] cursor-pointer"
+          style={{ background: T.accentBg2, border: T.accentBorder2, color: '#c4a0e0' }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onOpenChat}
+        >
+          Open →
+        </motion.button>
+      </div>
+
+      {/* Message bubbles */}
+      <div className="flex flex-col gap-[6px] px-[12px] py-[10px]">
+        {conversational.length > 3 && (
+          <p className="text-[10px] text-center" style={{ color: isDark ? '#555568' : '#9898a8' }}>
+            · · · earlier messages · · ·
+          </p>
+        )}
+        {recent.map((msg, idx) => (
+          <motion.div key={idx}
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              className="rounded-[12px] px-[10px] py-[6px] max-w-[85%]"
+              style={msg.type === 'user'
+                ? { background: T.userBubbleBg, border: `1px solid ${T.userBubbleBorder}` }
+                : { background: T.aiBubbleBg, border: T.aiBubbleBorder }
+              }
+            >
+              <p className="text-[12px] leading-[1.5]" style={{ color: T.bubbleText }}>{msg.text}</p>
+            </div>
+          </motion.div>
+        ))}
+        {isProcessing && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+            <div className="rounded-[12px] px-[10px] py-[8px]"
+              style={{ background: T.processBg, border: T.processBorder }}>
+              <div className="flex gap-[4px] items-center">
+                {[0, 0.2, 0.4].map((d, i) => (
+                  <motion.div key={i} className="size-[4px] rounded-full"
+                    style={{ background: T.dotBg }}
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: d }} />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, user, userMood, userEnergy, isDesktop }: {
   onNavigate: (screen: string) => void;
   aiPlans: ActionPlan[];
@@ -1404,6 +1487,13 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
               >
                 <p className="text-[#c4a0e0] text-[14px] font-bold">View in Your Sky →</p>
               </motion.button>
+              <MiniChatStrip
+                messages={displayMessages}
+                isProcessing={isProcessing}
+                isDark={isDark}
+                T={T}
+                onOpenChat={() => setView('chat')}
+              />
             </motion.div>
           )}
 
@@ -1421,6 +1511,13 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
               >
                 <p className="text-[#c4a0e0] text-[14px] font-bold">View in Your Sky →</p>
               </motion.button>
+              <MiniChatStrip
+                messages={displayMessages}
+                isProcessing={isProcessing}
+                isDark={isDark}
+                T={T}
+                onOpenChat={() => setView('chat')}
+              />
             </motion.div>
           )}
 

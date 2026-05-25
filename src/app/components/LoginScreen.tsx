@@ -125,7 +125,7 @@ export default function LoginScreen({ onNavigate, initialMode, isDesktop }: any)
       localStorage.removeItem(LS_REMEMBER);
       localStorage.removeItem(LS_EMAIL);
     }
-    onNavigate('checkin');
+    // Navigation is handled by onAuthStateChange in App.tsx (SIGNED_IN → onboarding)
   };
 
   // ── Handle sign-up ──────────────────────────────────────────────────────────

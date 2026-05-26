@@ -28,54 +28,115 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
   // ── Desktop layout ─────────────────────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div className="bg-[#08080f] overflow-hidden relative size-full">
+      <div className="bg-[#08080f] relative size-full flex items-center justify-center overflow-hidden">
         <Starfield density={80} />
-        <NebulaGlow color="gold" className="w-[400px] h-[400px] left-1/2 -translate-x-1/2 top-[180px]" />
 
-        <motion.p
-          className="absolute font-bold left-1/2 -translate-x-1/2 text-[#888888] text-[11px] tracking-[0.15em] top-[133px]"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 1 }}
-        >
-          IF TOMORROW ENDS
-        </motion.p>
-
-        {/* Constellation — constrained so it doesn't spill over the logo */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[-30px] w-[480px] h-[480px] z-[1]">
-          <ConstellationSVG className="w-full h-full" />
-        </div>
-
+        {/* ── Split card ──────────────────────────────────────────────────────── */}
         <motion.div
-          className="absolute left-1/2 -translate-x-1/2 top-[390px] z-[2]"
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 1 }}
+          className="relative z-10 flex w-full mx-8 rounded-[28px] overflow-hidden"
+          style={{
+            maxWidth: 940,
+            minHeight: 560,
+            maxHeight: 'calc(100vh - 80px)',
+            boxShadow: '0 0 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)',
+          }}
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
         >
-          <BecomingLogo />
+          {/* ── Left panel — constellation + logo ──────────────────────────── */}
+          <div
+            className="relative flex-[0_0_42%] flex flex-col items-center justify-center px-10 py-12 overflow-hidden"
+            style={{ background: '#090910' }}
+          >
+            <NebulaGlow color="gold" className="w-[340px] h-[340px] left-1/2 -translate-x-1/2 top-[50px]" />
+
+            {/* Constellation */}
+            <div className="w-[270px] h-[270px] mb-4 relative z-[1]">
+              <ConstellationSVG className="w-full h-full" />
+            </div>
+
+            {/* Logo */}
+            <motion.div
+              className="relative z-[1]"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.8, duration: 0.9 }}
+            >
+              <BecomingLogo width="min(200px, 45%)" />
+            </motion.div>
+          </div>
+
+          {/* ── Right panel — tagline + CTAs ───────────────────────────────── */}
+          <div
+            className="flex-1 flex flex-col px-12 py-10 overflow-hidden"
+            style={{ background: '#0e0e1a' }}
+          >
+            {/* Top row: Already have an account? [Sign In] */}
+            <motion.div
+              className="flex items-center justify-end gap-3 mb-auto"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+            >
+              <span className="text-[#666677] text-[13px]">Already have an account?</span>
+              <motion.button
+                className="px-4 h-[30px] rounded-full border border-[#444455] text-[#d4af78] text-[12px] font-medium cursor-pointer"
+                whileHover={{ borderColor: '#d4af78', background: 'rgba(212,175,120,0.06)' }}
+                onClick={() => onNavigate('login')}
+              >
+                Sign In
+              </motion.button>
+            </motion.div>
+
+            {/* Centre content — vertically centred in remaining space */}
+            <div className="flex flex-col justify-center flex-1 gap-0">
+              {/* Eyebrow */}
+              <motion.p
+                className="font-bold text-[11px] tracking-[0.18em] text-[#555566] uppercase mb-6"
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+              >
+                IF TOMORROW ENDS
+              </motion.p>
+
+              {/* Headline */}
+              <motion.p
+                className="font-bold text-[#f0e6cc] leading-tight mb-4"
+                style={{ fontSize: 'clamp(28px, 3vw, 42px)' }}
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.8 }}
+              >
+                What would you regret<br />not doing today?
+              </motion.p>
+
+              {/* Subtext */}
+              <motion.p
+                className="text-[#666677] text-[15px] leading-relaxed mb-10"
+                style={{ maxWidth: 340 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                transition={{ delay: 1.1, duration: 0.8 }}
+              >
+                A daily companion that helps you live with intention — before tomorrow ends.
+              </motion.p>
+
+              {/* CTA button */}
+              <motion.button
+                className="h-[54px] rounded-[27px] cursor-pointer flex items-center justify-center"
+                style={{
+                  maxWidth: 320,
+                  background: '#d4af78',
+                  boxShadow: '0 0 28px rgba(212,175,120,0.3)',
+                }}
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4, duration: 0.7 }}
+                whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(212,175,120,0.45)' }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onNavigate('signup')}
+              >
+                <p className="font-bold text-[#08080f] text-[16px]">Begin Becoming →</p>
+              </motion.button>
+            </div>
+          </div>
         </motion.div>
-
-        <motion.p
-          className="absolute left-1/2 -translate-x-1/2 top-[550px] text-[14px] italic text-[#888888] text-center w-[300px] z-[2]"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5, duration: 1 }}
-        >
-          what would you regret not doing today?
-        </motion.p>
-
-        <motion.button
-          className="absolute left-1/2 -translate-x-1/2 top-[606px] bg-[#d4af78] h-[54px] w-[280px] rounded-[27px] cursor-pointer z-[2]"
-          style={{ boxShadow: '0 0 24px rgba(212, 175, 120, 0.3)' }}
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3, duration: 0.8 }}
-          whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212, 175, 120, 0.5)' }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onNavigate('signup')}
-        >
-          <p className="font-bold text-[#08080f] text-[16px]">Begin Becoming</p>
-        </motion.button>
-
-        <motion.button
-          className="absolute left-1/2 -translate-x-1/2 top-[683px] cursor-pointer whitespace-nowrap font-normal text-[#9898a8] text-[12px] z-[2]"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3.5, duration: 1 }}
-          onClick={() => onNavigate('login')}
-        >
-          Already have an account?{' '}<span className="text-[#888888]">Sign in →</span>
-        </motion.button>
       </div>
     );
   }

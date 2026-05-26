@@ -197,26 +197,29 @@ export default function LoginScreen({ onNavigate, initialMode, isDesktop }: any)
             className="relative flex-[0_0_42%] flex flex-col items-center justify-center px-10 py-12 overflow-hidden"
             style={{ background: '#090910' }}
           >
-            {/* Ambient glow */}
-            <NebulaGlow color="gold" className="w-[320px] h-[320px] left-1/2 -translate-x-1/2 top-[60px]" />
+            {/* Ambient glow — centered behind the whole unit */}
+            <NebulaGlow color="gold" className="w-[340px] h-[340px] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
 
-            {/* Constellation */}
-            <div className="w-[260px] h-[260px] mb-4 relative z-[1]">
-              <ConstellationSVG className="w-full h-full" />
+            {/* Constellation + Logo as one centered unit */}
+            <div className="relative z-[1] flex flex-col items-center">
+              <div className="w-[200px] h-[200px]">
+                <ConstellationSVG className="w-full h-full" />
+              </div>
+              {/* Logo overlaps slightly with constellation bottom */}
+              <div className="-mt-3">
+                <BecomingLogo width="180px" />
+              </div>
             </div>
 
-            {/* Logo */}
-            <div className="relative z-[1]">
-              <BecomingLogo width="min(200px, 45%)" />
+            {/* Tagline pinned to bottom of panel */}
+            <div className="absolute bottom-8 flex flex-col items-center gap-1 z-[1]">
+              <p className="text-[10px] font-bold tracking-[0.18em] text-[#444455] uppercase">
+                IF TOMORROW ENDS
+              </p>
+              <p className="text-[12px] italic text-[#555566] text-center" style={{ maxWidth: 180 }}>
+                what would you regret not doing today?
+              </p>
             </div>
-
-            {/* Eyebrow */}
-            <p className="relative z-[1] text-[11px] font-bold tracking-[0.15em] text-[#555566] mt-5 uppercase">
-              IF TOMORROW ENDS
-            </p>
-            <p className="relative z-[1] text-[13px] italic text-[#666677] text-center mt-2" style={{ maxWidth: 200 }}>
-              what would you regret not doing today?
-            </p>
           </div>
 
           {/* ── Right panel — form ─────────────────────────────────────────── */}

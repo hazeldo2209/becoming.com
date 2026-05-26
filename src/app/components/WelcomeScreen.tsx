@@ -49,22 +49,24 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
             className="relative flex-[0_0_42%] flex flex-col items-center justify-center px-10 py-12 overflow-hidden"
             style={{ background: '#090910' }}
           >
-            <NebulaGlow color="gold" className="w-[340px] h-[340px] left-1/2 -translate-x-1/2 top-[50px]" />
+            {/* Ambient glow — centered behind the whole unit */}
+            <NebulaGlow color="gold" className="w-[340px] h-[340px] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
 
-            {/* Constellation */}
-            <div className="w-[270px] h-[270px] mb-4 relative z-[1]">
-              <ConstellationSVG className="w-full h-full" />
+            {/* Constellation + Logo as one centered unit */}
+            <div className="relative z-[1] flex flex-col items-center">
+              <div className="w-[200px] h-[200px]">
+                <ConstellationSVG className="w-full h-full" />
+              </div>
+              {/* Logo overlaps slightly with constellation bottom */}
+              <motion.div
+                className="-mt-3"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8, duration: 0.9 }}
+              >
+                <BecomingLogo width="180px" />
+              </motion.div>
             </div>
-
-            {/* Logo */}
-            <motion.div
-              className="relative z-[1]"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.8, duration: 0.9 }}
-            >
-              <BecomingLogo width="min(200px, 45%)" />
-            </motion.div>
           </div>
 
           {/* ── Right panel — tagline + CTAs ───────────────────────────────── */}

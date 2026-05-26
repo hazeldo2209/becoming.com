@@ -540,7 +540,7 @@ export default function OnboardingScreen({ onNavigate, isDesktop }: { onNavigate
   const Illustration = slide.illustration;
 
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full flex flex-col">
       <Starfield density={50} />
 
       {/* Ambient glow behind illustration */}
@@ -549,7 +549,7 @@ export default function OnboardingScreen({ onNavigate, isDesktop }: { onNavigate
         className="absolute rounded-full pointer-events-none"
         style={{
           width: 320, height: 320,
-          left: '50%', top: 160,
+          left: '50%', top: 80,
           transform: 'translateX(-50%)',
           background: `radial-gradient(ellipse at center, ${slide.glowColor} 0%, transparent 70%)`,
         }}
@@ -557,41 +557,36 @@ export default function OnboardingScreen({ onNavigate, isDesktop }: { onNavigate
         transition={{ duration: 0.6 }}
       />
 
-      {/* Status bar */}
-      <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent pointer-events-none" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-      <p className="absolute font-normal right-[20px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
-
-      {/* Skip button (top-right, hidden on last slide) */}
-      {!isLast && (
-        <motion.button
-          className="absolute right-[20px] top-[56px] z-10 cursor-pointer"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-          onClick={skip}
-        >
-          <p className="text-[#555568] text-[13px]">Skip</p>
-        </motion.button>
-      )}
-
-      {/* Progress dots */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[60px] flex gap-[6px] z-10">
-        {SLIDES.map((_, i) => (
-          <motion.div
-            key={i}
-            className="h-[4px] rounded-full"
-            animate={{
-              width: i === slideIndex ? 24 : 6,
-              backgroundColor: i === slideIndex
-                ? slide.accentColor
-                : i < slideIndex ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
-            }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-          />
-        ))}
+      {/* Top bar: progress dots + skip button */}
+      <div className="relative z-10 shrink-0 flex items-center justify-between px-[24px] pt-[56px] pb-[8px]">
+        <div className="flex gap-[6px]">
+          {SLIDES.map((_, i) => (
+            <motion.div
+              key={i}
+              className="h-[4px] rounded-full"
+              animate={{
+                width: i === slideIndex ? 24 : 6,
+                backgroundColor: i === slideIndex
+                  ? slide.accentColor
+                  : i < slideIndex ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
+              }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            />
+          ))}
+        </div>
+        {!isLast && (
+          <motion.button
+            className="cursor-pointer"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+            onClick={skip}
+          >
+            <p className="text-[#555568] text-[13px]">Skip</p>
+          </motion.button>
+        )}
       </div>
 
       {/* Illustration area */}
-      <div className="absolute left-0 right-0 top-[88px] h-[260px]">
+      <div className="relative z-[1] shrink-0 h-[240px]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={slide.key}
@@ -611,7 +606,7 @@ export default function OnboardingScreen({ onNavigate, isDesktop }: { onNavigate
       <AnimatePresence mode="wait">
         <motion.div
           key={slide.key + '-text'}
-          className="absolute left-[28px] right-[28px] top-[364px]"
+          className="relative z-[1] flex-1 px-[28px] pt-[8px] overflow-y-auto"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
@@ -627,7 +622,7 @@ export default function OnboardingScreen({ onNavigate, isDesktop }: { onNavigate
             <div className="mb-[12px] h-[16px]" />
           )}
 
-          {/* Headline — split so accent word glows */}
+          {/* Headline */}
           <p className="font-bold text-[#f0e6cc] text-[30px] leading-[1.2] mb-[14px] whitespace-pre-line">
             {slide.headline.replace(slide.headlineAccent, '').trim()}
             {'\n'}
@@ -641,37 +636,38 @@ export default function OnboardingScreen({ onNavigate, isDesktop }: { onNavigate
         </motion.div>
       </AnimatePresence>
 
-      {/* CTA button */}
-      <motion.button
-        className="absolute left-[28px] right-[28px] h-[54px] rounded-[27px] flex items-center justify-center cursor-pointer"
-        style={{
-          bottom: 100,
-          background: slide.accentColor,
-          boxShadow: `0 0 28px ${slide.glowColor.replace('0.15', '0.4').replace('0.12', '0.35')}`,
-        }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={advance}
-        key={slide.key + '-cta'}
-        layout
-      >
-        <p className="font-bold text-[#08080f] text-[16px]">{slide.cta}</p>
-      </motion.button>
-
-      {/* Secondary skip / "I'll explore later" (last slide only shows nothing extra) */}
-      {!isLast && (
+      {/* CTA + secondary skip */}
+      <div className="relative z-[1] shrink-0 px-[28px] pb-[8px] flex flex-col items-center gap-[8px]">
         <motion.button
-          className="absolute left-1/2 -translate-x-1/2 cursor-pointer whitespace-nowrap"
-          style={{ bottom: 68 }}
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-          onClick={skip}
+          className="w-full h-[54px] rounded-[27px] flex items-center justify-center cursor-pointer"
+          style={{
+            background: slide.accentColor,
+            boxShadow: `0 0 28px ${slide.glowColor.replace('0.15', '0.4').replace('0.12', '0.35')}`,
+          }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={advance}
+          key={slide.key + '-cta'}
+          layout
         >
-          <p className="text-[#555568] text-[12px] underline underline-offset-2">I'll explore on my own</p>
+          <p className="font-bold text-[#08080f] text-[16px]">{slide.cta}</p>
         </motion.button>
-      )}
+
+        {!isLast && (
+          <motion.button
+            className="cursor-pointer py-[4px]"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+            onClick={skip}
+          >
+            <p className="text-[#555568] text-[12px] underline underline-offset-2">I'll explore on my own</p>
+          </motion.button>
+        )}
+      </div>
 
       {/* Home indicator */}
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+      <div className="shrink-0 h-[24px] flex items-center justify-center">
+        <div className="bg-[#333333] h-[4px] rounded-[2px] w-[100px]" />
+      </div>
     </div>
   );
 }

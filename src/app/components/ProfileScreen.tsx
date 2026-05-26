@@ -146,39 +146,21 @@ export default function ProfileScreen({ onNavigate, reflections, aiPlans, user, 
 
   return (
     <div
-      className={isDesktop ? 'relative size-full' : 'overflow-hidden relative rounded-[36px] size-full'}
+      className={isDesktop ? 'relative size-full' : 'overflow-hidden relative rounded-[36px] size-full flex flex-col'}
       style={{ backgroundColor: isDark ? '#08080f' : '#f4f0e8' }}
     >
       <Starfield density={isDark ? 30 : 10} />
       <NebulaGlow color="gold" className="w-[280px] h-[280px] left-[55px] top-[140px]" />
 
-      {/* Status bar (mobile only) */}
-      {!isDesktop && (
-        <>
-          <div
-            className="absolute h-[44px] left-0 top-0 w-full z-20 pointer-events-none"
-            style={{
-              background: isDark
-                ? 'linear-gradient(to bottom, #08080f, transparent)'
-                : 'linear-gradient(to bottom, #f4f0e8, transparent)',
-            }}
-          />
-          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-20"
-             style={{ color: isDark ? '#f0e6cc' : '#1c3a5c' }}>9:41</p>
-          <p className="absolute font-normal left-[317px] text-[11px] top-[11px] z-20"
-             style={{ color: isDark ? '#888888' : '#7a8fa0' }}>▶ ▶▶ ▊▊</p>
-        </>
-      )}
-
       {/* Scrollable content */}
       <div
-        className={isDesktop ? 'absolute top-0 left-0 right-0 bottom-0 overflow-y-auto' : 'absolute top-0 left-0 right-0 bottom-[90px] overflow-y-auto'}
+        className={isDesktop ? 'absolute top-0 left-0 right-0 bottom-0 overflow-y-auto' : 'relative z-[1] flex-1 overflow-y-auto'}
         style={{ scrollbarWidth: 'none' }}
       >
         {/* Centering wrapper on desktop */}
         <div className={isDesktop ? 'max-w-[560px] mx-auto' : ''}>
         {/* Header */}
-        <div className={isDesktop ? 'pt-[28px] px-[24px]' : 'pt-[55px] px-[17px]'}>
+        <div className={isDesktop ? 'pt-[28px] px-[24px]' : 'pt-[56px] px-[17px]'}>
           <p className="font-bold text-[24px]" style={{ color: isDark ? '#f0e6cc' : '#1c3a5c' }}>
             Profile
           </p>
@@ -388,24 +370,23 @@ export default function ProfileScreen({ onNavigate, reflections, aiPlans, user, 
 
       {/* Bottom nav (mobile only) */}
       {!isDesktop && (
-        <>
-          <div
-            className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full z-20 border-t"
-            style={{
-              backgroundColor: isDark ? '#0b0a18' : '#f4f0e8',
-              borderColor: isDark ? '#1a1a1a' : '#d4c8b0',
-            }}
-          >
+        <div
+          className="relative z-20 shrink-0 border-t"
+          style={{
+            backgroundColor: isDark ? '#0b0a18' : '#f4f0e8',
+            borderColor: isDark ? '#1a1a1a' : '#d4c8b0',
+          }}
+        >
+          <div className="flex gap-[31px] h-[74px] items-center justify-center">
             <NavIcon type="today" active={false} onClick={() => onNavigate('today')} />
             <NavIcon type="sky"   active={false} onClick={() => onNavigate('sky')} />
             <NavIcon type="ai"    active={false} onClick={() => onNavigate('ai')} />
             <NavIcon type="profile" active={true} onClick={() => {}} />
           </div>
-          <div
-            className="absolute h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px] z-20"
-            style={{ backgroundColor: isDark ? '#333333' : '#c8d4de' }}
-          />
-        </>
+          <div className="flex items-center justify-center pb-[6px]">
+            <div className="h-[4px] rounded-[2px] w-[100px]" style={{ backgroundColor: isDark ? '#333333' : '#c8d4de' }} />
+          </div>
+        </div>
       )}
     </div>
   );

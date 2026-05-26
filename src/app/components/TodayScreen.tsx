@@ -242,19 +242,13 @@ export default function TodayScreen({
 
   return (
     <div
-      className={isDesktop ? 'relative size-full flex flex-col' : 'overflow-hidden relative rounded-[36px] size-full'}
+      className={isDesktop ? 'relative size-full flex flex-col' : 'overflow-hidden relative rounded-[36px] size-full flex flex-col'}
       style={{ background: screenBg }}
     >
       <Starfield density={30} />
 
-      {/* ── Phone chrome (mobile only) ──────────────────────────────────── */}
-      {!isDesktop && (
-        <>
-          <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent pointer-events-none" />
-          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-          <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
-        </>
-      )}
+      {/* Nebula glow */}
+      <NebulaGlow color="gold" className="w-[250px] h-[200px] left-[70px] top-[150px] pointer-events-none" />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       {isDesktop ? (
@@ -263,24 +257,21 @@ export default function TodayScreen({
           <p className="font-normal text-[14px]" style={{ color: textMuted }}>{dateStr}</p>
         </div>
       ) : (
-        <>
-          <p className="absolute font-bold left-[17px] text-[24px] top-[55px]" style={{ color: textPrimary }}>Today</p>
-          <p className="absolute font-normal right-[17px] text-[13px] top-[62px]" style={{ color: textMuted }}>{dateStr}</p>
-        </>
+        <div className="relative z-10 shrink-0 flex items-center justify-between px-[17px] pt-[56px] pb-[12px]">
+          <p className="font-bold text-[24px]" style={{ color: textPrimary }}>Today</p>
+          <p className="font-normal text-[13px]" style={{ color: textMuted }}>{dateStr}</p>
+        </div>
       )}
 
       {/* Divider */}
       <div
-        className={isDesktop ? 'relative shrink-0 h-[1px] mx-[24px]' : 'absolute h-[1px] left-[17px] right-[17px] top-[95px]'}
+        className={isDesktop ? 'relative shrink-0 h-[1px] mx-[24px]' : 'relative shrink-0 h-[1px] mx-[17px]'}
         style={{ background: `linear-gradient(to right, transparent, ${divider}, transparent)` }}
       />
 
-      {/* Nebula glow (positioned relative to root, not scroll container) */}
-      <NebulaGlow color="gold" className="w-[250px] h-[200px] left-[70px] top-[150px] pointer-events-none" />
-
       {/* ── Scrollable content ─────────────────────────────────────────────── */}
       <div
-        className={isDesktop ? 'flex-1 overflow-y-auto' : 'absolute left-0 right-0 top-[103px] bottom-[90px] overflow-y-auto'}
+        className={isDesktop ? 'flex-1 overflow-y-auto' : 'relative z-[1] flex-1 overflow-y-auto'}
         style={{ scrollbarWidth: 'none' }}
       >
         <div className={isDesktop ? 'px-[24px] pt-[16px] pb-[32px]' : 'px-[17px] pt-[8px] pb-[24px]'}>
@@ -503,15 +494,17 @@ export default function TodayScreen({
 
       {/* Bottom nav (mobile only) */}
       {!isDesktop && (
-        <>
-          <div className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t" style={{ background: card, borderColor: cardBorder }}>
+        <div className="relative z-10 shrink-0 border-t" style={{ background: card, borderColor: cardBorder }}>
+          <div className="flex gap-[31px] h-[74px] items-center justify-center">
             <NavIcon type="today"   active={true}  onClick={() => onNavigate('today')}   />
             <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
             <NavIcon type="ai"      active={false} onClick={() => onNavigate('ai')}      />
             <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
           </div>
-          <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
-        </>
+          <div className="flex items-center justify-center pb-[6px]">
+            <div className="bg-[#333333] h-[4px] rounded-[2px] w-[100px]" />
+          </div>
+        </div>
       )}
     </div>
   );

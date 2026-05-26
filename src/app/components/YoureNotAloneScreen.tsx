@@ -144,18 +144,11 @@ export default function YoureNotAloneScreen({ onNavigate, isDesktop }: any) {
 
   // ── Mobile layout ──────────────────────────────────────────────────────────
   return (
-    <div
-      className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full"
-    >
+    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full flex flex-col">
       <Starfield density={100} />
 
-      {/* Status bar */}
-      <div className="absolute h-[44px] left-0 top-0 w-full z-10" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-      <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
-
-      {/* All content centered via absolute anchor */}
-      <div className="absolute inset-x-[17px] top-[140px] flex flex-col items-center gap-[20px]">
+      {/* Scrollable content */}
+      <div className="relative z-[1] flex-1 overflow-y-auto flex flex-col items-center px-[24px] pt-[60px] pb-[24px] gap-[20px]">
         {eyebrow}
         {headline}
         {subtext}
@@ -167,7 +160,9 @@ export default function YoureNotAloneScreen({ onNavigate, isDesktop }: any) {
       </div>
 
       {/* Home indicator */}
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
+      <div className="shrink-0 h-[24px] flex items-center justify-center">
+        <div className="bg-[#333333] h-[4px] rounded-[2px] w-[100px]" />
+      </div>
     </div>
   );
 }

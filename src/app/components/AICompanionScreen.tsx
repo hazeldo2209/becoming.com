@@ -1200,21 +1200,19 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
 
   return (
     <div
-      className={isDesktop ? 'relative size-full flex flex-col' : 'overflow-hidden relative rounded-[36px] size-full'}
+      className={isDesktop ? 'relative size-full flex flex-col' : 'relative size-full flex flex-col overflow-hidden'}
       style={{ backgroundColor: T.screenBg }}
     >
       <Starfield density={30} />
       <NebulaGlow color="purple" className="w-[300px] h-[300px] left-[45px] top-[100px]" />
 
-      {/* Status bar (mobile only) */}
+      {/* Top gradient fade (mobile only) */}
       {!isDesktop && (
-        <>
-          <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
-        </>
+        <div className="absolute top-0 left-0 right-0 h-[44px] z-10 pointer-events-none bg-gradient-to-b from-[#08080f] to-transparent" />
       )}
 
       {/* ── Header bar ────────────────────────────────────────────────────── */}
-      <div className={`${isDesktop ? 'relative' : 'absolute left-0 right-0 top-[44px]'} h-[44px] flex items-center justify-between px-[14px] z-10 shrink-0`}>
+      <div className={`relative h-[44px] flex items-center justify-between px-[14px] z-10 shrink-0 ${isDesktop ? '' : 'mt-[env(safe-area-inset-top,44px)]'}`}>
 
         {/* Hamburger button */}
         <motion.button
@@ -1282,14 +1280,14 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
       </div>
 
       <div
-        className={isDesktop ? 'relative h-[1px] mx-[17px] shrink-0' : 'absolute h-[1px] left-[17px] right-[17px] top-[88px] z-10'}
+        className="relative h-[1px] mx-[17px] shrink-0"
         style={{ background: `linear-gradient(to right, transparent, ${T.headerBorder}, transparent)` }}
       />
 
       {/* ── Content area ─────────────────────────────────────────────────── */}
       <div
         ref={scrollRef}
-        className={isDesktop ? 'flex-1 overflow-y-auto px-[17px]' : 'absolute left-0 right-0 top-[96px] bottom-[170px] overflow-y-auto px-[17px]'}
+        className="flex-1 overflow-y-auto px-[17px]"
         style={{ scrollbarWidth: 'none' }}
       >
         <AnimatePresence mode="wait">
@@ -1524,10 +1522,7 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
 
       {/* Privacy label */}
       {view !== 'manual' && (
-        <div
-          className="flex items-center gap-[5px] px-[17px] py-[6px] shrink-0"
-          style={isDesktop ? {} : { position: 'absolute', left: 0, bottom: 160 }}
-        >
+        <div className="flex items-center gap-[5px] px-[17px] py-[4px] shrink-0">
           <p className="text-[10px]" style={{ color: isDark ? '#444458' : '#7a8fa0' }}>
             🔒 Your reflections are private and never shared
           </p>
@@ -1536,49 +1531,44 @@ export default function AICompanionScreen({ onNavigate, aiPlans, setAiPlans, use
 
       {/* Input row */}
       {view !== 'manual' && (
-      <div
-        className="flex gap-[6px] px-[17px] py-[12px] shrink-0"
-        style={isDesktop ? {} : { position: 'absolute', left: 0, right: 0, bottom: 106 }}
-      >
-        <div
-          className={`h-[48px] rounded-[24px] flex items-center px-[18px] ${isDesktop ? 'flex-1' : 'w-[295px]'}`}
-          style={{ background: isDark ? '#0b0a18' : '#ffffff', border: `1px solid ${isDark ? '#333333' : 'rgba(92,58,122,0.2)'}` }}
-        >
-          <input
-            type="text"
-            placeholder={isNewMode ? 'What would you like to work on?' : 'Ask about this plan…'}
-            value={userInput}
-            onChange={e => setUserInput(e.target.value)}
-            onKeyPress={e => e.key === 'Enter' && handleSend()}
-            className="w-full bg-transparent outline-none text-[13px] placeholder:text-[#8888a0]"
-            style={{ color: T.bubbleText }}
-          />
+        <div className="flex gap-[6px] px-[17px] py-[10px] shrink-0">
+          <div
+            className="h-[48px] rounded-[24px] flex items-center px-[18px] flex-1"
+            style={{ background: isDark ? '#0b0a18' : '#ffffff', border: `1px solid ${isDark ? '#333333' : 'rgba(92,58,122,0.2)'}` }}
+          >
+            <input
+              type="text"
+              placeholder={isNewMode ? 'What would you like to work on?' : 'Ask about this plan…'}
+              value={userInput}
+              onChange={e => setUserInput(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleSend()}
+              className="w-full bg-transparent outline-none text-[13px] placeholder:text-[#8888a0]"
+              style={{ color: T.bubbleText }}
+            />
+          </div>
+          <motion.button
+            className="rounded-[24px] size-[48px] flex items-center justify-center cursor-pointer shrink-0"
+            style={{ background: T.sendBg, boxShadow: T.sendShadow }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSend}
+          >
+            <p className="font-bold text-[18px] text-[#08080f]">↑</p>
+          </motion.button>
         </div>
-        <motion.button
-          className="rounded-[24px] size-[48px] flex items-center justify-center cursor-pointer shrink-0"
-          style={{ background: T.sendBg, boxShadow: T.sendShadow }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleSend}
-        >
-          <p className="font-bold text-[18px] text-[#08080f]">↑</p>
-        </motion.button>
-      </div>
       )}
 
       {/* Bottom nav (mobile only) */}
       {!isDesktop && (
-        <>
-          <div
-            className="absolute flex gap-[31px] h-[90px] items-center justify-center left-0 bottom-0 w-full border-t"
-            style={{ backgroundColor: isDark ? '#0b0a18' : '#f4f0e8', borderColor: isDark ? '#1a1a1a' : 'rgba(92,58,122,0.12)' }}
-          >
-            <NavIcon type="today"   active={false} onClick={() => onNavigate('today')}   />
-            <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
-            <NavIcon type="ai"      active={true}  onClick={() => onNavigate('ai')}      />
-            <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
-          </div>
-        </>
+        <div
+          className="flex gap-[31px] h-[72px] items-center justify-center w-full border-t shrink-0"
+          style={{ backgroundColor: isDark ? '#0b0a18' : '#f4f0e8', borderColor: isDark ? '#1a1a1a' : 'rgba(92,58,122,0.12)' }}
+        >
+          <NavIcon type="today"   active={false} onClick={() => onNavigate('today')}   />
+          <NavIcon type="sky"     active={false} onClick={() => onNavigate('sky')}     />
+          <NavIcon type="ai"      active={true}  onClick={() => onNavigate('ai')}      />
+          <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
+        </div>
       )}
 
       {/* History drawer (slides in over everything) */}

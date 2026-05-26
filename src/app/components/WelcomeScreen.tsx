@@ -1,7 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Starfield, NebulaGlow } from './CosmicElements';
 import svgPaths from '../../imports/svg-enakyo375k';
+
+// Returns the true visible viewport height — fixes the iOS/Chrome vh bug
+// where 100vh includes the browser address bar, pushing bottom-anchored
+// elements off-screen.
+function useViewportHeight() {
+  const [h, setH] = useState(() => window.innerHeight);
+  useEffect(() => {
+    const update = () => setH(window.innerHeight);
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, []);
+  return h;
+}
 
 // Shared SVG constellation paths component
 // Safari-safe style for SVG path transforms
@@ -73,6 +90,10 @@ function BecomingLogo() {
 }
 
 export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
+  const vph = useViewportHeight();
+  // Convert a percentage to pixels based on actual viewport height
+  const vh = (pct: number) => `${(vph * pct) / 100}px`;
+
   // ── Desktop layout ─────────────────────────────────────────────────────────
   if (isDesktop) {
     return (
@@ -135,7 +156,7 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
       {/* Eyebrow */}
       <motion.p
         className="absolute left-1/2 -translate-x-1/2 font-bold text-[#888888] text-[11px] tracking-[0.15em] whitespace-nowrap z-[1]"
-        style={{ top: '12vh' }}
+        style={{ top: vh(12) }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.8 }}
       >
@@ -143,14 +164,14 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
       </motion.p>
 
       {/* Constellation — large, fills upper half */}
-      <div className="absolute left-0 right-0 z-[1]" style={{ top: '3vh', height: '55vh' }}>
+      <div className="absolute left-0 right-0 z-[1]" style={{ top: vh(3), height: vh(55) }}>
         <ConstellationSVG className="w-full h-full" />
       </div>
 
       {/* BECOMING logo — sits just below constellation */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 z-[1]"
-        style={{ top: '57vh' }}
+        style={{ top: vh(57) }}
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.6, duration: 0.8 }}
       >
@@ -160,7 +181,7 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
       {/* Tagline — generous gap below logo */}
       <motion.p
         className="absolute left-1/2 -translate-x-1/2 text-[15px] italic text-[#888888] text-center z-[1]"
-        style={{ top: '76vh', width: 'min(280px, 80vw)' }}
+        style={{ top: vh(76), width: 'min(280px, 80vw)' }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 0.8 }}
       >
@@ -170,7 +191,7 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
       {/* CTA button */}
       <motion.button
         className="absolute left-1/2 -translate-x-1/2 bg-[#d4af78] h-[54px] rounded-[27px] cursor-pointer z-[1]"
-        style={{ bottom: '11vh', width: 'min(320px, calc(100vw - 48px))', boxShadow: '0 0 24px rgba(212,175,120,0.3)' }}
+        style={{ bottom: vh(11), width: 'min(320px, calc(100vw - 48px))', boxShadow: '0 0 24px rgba(212,175,120,0.3)' }}
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2.4, duration: 0.7 }}
         whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212,175,120,0.5)' }}
@@ -183,7 +204,7 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
       {/* Sign in link */}
       <motion.button
         className="absolute left-1/2 -translate-x-1/2 cursor-pointer font-normal text-[#9898a8] text-[13px] whitespace-nowrap z-[1]"
-        style={{ bottom: '5vh' }}
+        style={{ bottom: vh(5) }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 2.8, duration: 0.8 }}
         onClick={() => onNavigate('login')}

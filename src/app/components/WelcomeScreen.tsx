@@ -116,65 +116,65 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
     );
   }
 
-  // ── Mobile layout ──────────────────────────────────────────────────────────
+  // ── Mobile layout — absolute positioning with vh units, mirrors desktop approach ──
   return (
-    <div className="bg-[#08080f] overflow-hidden relative size-full flex flex-col items-center">
-      {/* Background layers */}
+    <div className="bg-[#08080f] overflow-hidden relative size-full">
+      {/* Background */}
       <Starfield density={80} />
-      <NebulaGlow color="gold" className="w-[300px] h-[300px] left-1/2 -translate-x-1/2 top-[5vh]" />
+      <NebulaGlow color="gold" className="w-[300px] h-[300px] left-1/2 -translate-x-1/2 top-[8vh]" />
 
-      {/* ── Eyebrow ── */}
+      {/* Eyebrow */}
       <motion.p
-        className="relative z-[1] font-bold text-[#888888] text-[11px] tracking-[0.15em] whitespace-nowrap"
-        style={{ marginTop: '13vh' }}
+        className="absolute left-1/2 -translate-x-1/2 font-bold text-[#888888] text-[11px] tracking-[0.15em] whitespace-nowrap z-[1]"
+        style={{ top: '13vh' }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.8 }}
       >
         IF TOMORROW ENDS
       </motion.p>
 
-      {/* ── Constellation — fills a vh-based container so it scales on any phone ── */}
-      <div className="relative z-[1] w-full shrink-0" style={{ height: '40vh' }}>
-        <ConstellationSVG className="absolute inset-0 w-full h-full" />
+      {/* Constellation — positioned in top half, scales with vh */}
+      <div className="absolute left-0 right-0 z-[1]" style={{ top: '6vh', height: '46vh' }}>
+        <ConstellationSVG className="w-full h-full" />
       </div>
 
-      {/* ── Logo ── */}
+      {/* BECOMING logo */}
       <motion.div
-        className="relative z-[1] shrink-0"
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        className="absolute left-1/2 -translate-x-1/2 z-[1]"
+        style={{ top: '54vh' }}
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.6, duration: 0.8 }}
       >
         <BecomingLogo />
       </motion.div>
 
-      {/* ── Tagline ── */}
+      {/* Tagline */}
       <motion.p
-        className="relative z-[1] text-[14px] italic text-[#888888] text-center px-[32px] mt-[10px]"
+        className="absolute left-1/2 -translate-x-1/2 text-[14px] italic text-[#888888] text-center z-[1]"
+        style={{ top: '67vh', width: 'min(280px, 80vw)' }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 0.8 }}
       >
         what would you regret not doing today?
       </motion.p>
 
-      {/* Spacer — pushes buttons toward bottom */}
-      <div className="flex-1" />
-
-      {/* ── CTA button ── */}
+      {/* CTA button */}
       <motion.button
-        className="relative z-[1] bg-[#d4af78] h-[54px] w-full max-w-[320px] rounded-[27px] cursor-pointer mx-[24px]"
-        style={{ boxShadow: '0 0 24px rgba(212, 175, 120, 0.3)' }}
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        className="absolute left-1/2 -translate-x-1/2 bg-[#d4af78] h-[54px] rounded-[27px] cursor-pointer z-[1]"
+        style={{ bottom: '13vh', width: 'min(320px, calc(100vw - 48px))', boxShadow: '0 0 24px rgba(212,175,120,0.3)' }}
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2.4, duration: 0.7 }}
-        whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212, 175, 120, 0.5)' }}
+        whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212,175,120,0.5)' }}
         whileTap={{ scale: 0.98 }}
         onClick={() => onNavigate('signup')}
       >
         <p className="font-bold text-[#08080f] text-[16px]">Begin Becoming</p>
       </motion.button>
 
-      {/* ── Sign in link ── */}
+      {/* Sign in link */}
       <motion.button
-        className="relative z-[1] cursor-pointer font-normal text-[#9898a8] text-[13px] mt-[12px] mb-[48px]"
+        className="absolute left-1/2 -translate-x-1/2 cursor-pointer font-normal text-[#9898a8] text-[13px] whitespace-nowrap z-[1]"
+        style={{ bottom: '7vh' }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 2.8, duration: 0.8 }}
         onClick={() => onNavigate('login')}

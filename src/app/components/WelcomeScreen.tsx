@@ -21,52 +21,58 @@ function useViewportHeight() {
 }
 
 // Shared SVG constellation paths component
-// Safari-safe style for SVG path transforms
-const starStyle = (extra?: string) => ({
-  transformBox: 'fill-box' as const,
-  transformOrigin: 'center' as const,
-  filter: extra ?? 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))',
-});
-
 function ConstellationSVG({ className }: { className: string }) {
+  const glow = 'drop-shadow(0 0 4px rgba(212,175,120,0.8))';
+  // Pure CSS keyframe animations — bypasses Framer Motion WAAPI entirely,
+  // guaranteed to work in all Safari versions.
+  const css = `
+    @keyframes cFadeIn  { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes cLineFade { from { opacity: 0 } to { opacity: 0.4 } }
+    .c-line { opacity:0; animation: cLineFade 1.4s ease forwards 0.6s }
+    .c-s0  { opacity:0; animation: cFadeIn .4s ease forwards 0.8s }
+    .c-s1  { opacity:0; animation: cFadeIn .4s ease forwards 0.95s }
+    .c-s2  { opacity:0; animation: cFadeIn .4s ease forwards 1.1s }
+    .c-s3  { opacity:0; animation: cFadeIn .4s ease forwards 1.25s }
+    .c-s4  { opacity:0; animation: cFadeIn .4s ease forwards 1.4s }
+    .c-s5  { opacity:0; animation: cFadeIn .4s ease forwards 1.55s }
+    .c-s6  { opacity:0; animation: cFadeIn .4s ease forwards 1.7s }
+    .c-s7  { opacity:0; animation: cFadeIn .4s ease forwards 1.85s }
+    .c-s8  { opacity:0; animation: cFadeIn .4s ease forwards 2.0s }
+    .c-s9  { opacity:0; animation: cFadeIn .4s ease forwards 2.15s }
+    .c-s10 { opacity:0; animation: cFadeIn .4s ease forwards 2.3s }
+    .c-s11 { opacity:0; animation: cFadeIn .4s ease forwards 2.45s }
+    .c-s12 { opacity:0; animation: cFadeIn .4s ease forwards 2.6s }
+  `;
   return (
-    <motion.svg
+    <svg
       className={className}
       width="100%"
       height="100%"
       viewBox="0 0 572 513"
       preserveAspectRatio="xMidYMid meet"
       fill="none"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.4, duration: 1.2 }}
     >
-      {/* Connecting dotted line — fade in (pathLength conflicts with strokeDasharray in Safari) */}
-      <motion.path
-        d={svgPaths.p128b0880}
-        stroke="#D4AF78"
-        strokeWidth="0.583333"
-        strokeDasharray="0.58 0.58"
-        fill="none"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
-        transition={{ delay: 0.8, duration: 1.5, ease: 'easeInOut' }}
-      />
-      {/* Star dots — scale from center using transformBox: fill-box for Safari */}
-      <motion.path d={svgPaths.p1268030} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.9,  duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.pc875900} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.0,  duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p3378f330} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.1, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p2167db00} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.2, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.pb2ea300}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.3, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p22eb9400} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.4, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p2ef4dc00} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.5, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p1581b300} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.6, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.pab1e800}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.7, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p3e010000} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.8, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.pee1c000}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.9, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p652bc00}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.0, duration: 0.4 }} style={starStyle()} />
-      <motion.path d={svgPaths.p1c019680} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.1, duration: 0.4 }} style={starStyle()} />
-    </motion.svg>
+      <defs><style>{css}</style></defs>
+
+      {/* Connecting dotted line */}
+      <path className="c-line" d={svgPaths.p128b0880}
+        stroke="#D4AF78" strokeWidth="0.583333" strokeDasharray="0.58 0.58" fill="none" />
+
+      {/* Star dots — staggered fade-in */}
+      <path className="c-s0"  d={svgPaths.p1268030}  fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s1"  d={svgPaths.pc875900}  fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s2"  d={svgPaths.p3378f330} fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s3"  d={svgPaths.p2167db00} fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s4"  d={svgPaths.pb2ea300}  fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s5"  d={svgPaths.p22eb9400} fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s6"  d={svgPaths.p2ef4dc00} fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s7"  d={svgPaths.p1581b300} fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s8"  d={svgPaths.pab1e800}  fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s9"  d={svgPaths.p3e010000} fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s10" d={svgPaths.pee1c000}  fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s11" d={svgPaths.p652bc00}  fill="#D4AF78" style={{ filter: glow }} />
+      <path className="c-s12" d={svgPaths.p1c019680} fill="#D4AF78" style={{ filter: glow }} />
+    </svg>
   );
 }
 

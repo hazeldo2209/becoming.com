@@ -22,12 +22,11 @@ export default function SkyGrowthScreen({ onBack }: any) {
   ];
 
   return (
-    <div className="bg-[#08080f] overflow-y-auto relative rounded-[36px] size-full">
+    <div className="bg-[#08080f] overflow-y-auto relative size-full">
       <Starfield density={40} />
 
       {/* Status bar */}
       <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
 
       {/* Back button */}
       <motion.button
@@ -219,7 +218,6 @@ export default function SkyGrowthScreen({ onBack }: any) {
       </motion.div>
 
       {/* Home indicator */}
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
     </div>
   );
 }

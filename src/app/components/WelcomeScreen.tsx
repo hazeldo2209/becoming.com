@@ -117,7 +117,7 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
 
   // ── Mobile layout ──────────────────────────────────────────────────────────
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full flex flex-col">
+    <div className="bg-[#08080f] overflow-hidden relative size-full flex flex-col">
       <Starfield density={80} />
       <NebulaGlow color="gold" className="w-[300px] h-[300px] left-[45px] top-[120px]" />
 

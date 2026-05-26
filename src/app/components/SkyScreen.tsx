@@ -774,7 +774,7 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
     };
     if (!currentPlan) {
       return (
-        <div className={`bg-[#08080f] relative size-full flex items-center justify-center ${isDesktop ? '' : 'overflow-hidden rounded-[36px]'}`}>
+        <div className={`bg-[#08080f] relative size-full flex items-center justify-center ${isDesktop ? '' : 'overflow-hidden'}`}>
           <div className="text-center">
             <p className="text-[#8888a0] text-[14px] mb-[12px]">No plan selected.</p>
             <button className="text-[#c4a0e0] text-[12px]" onClick={() => setView('main')}>← Back</button>
@@ -806,11 +806,10 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
     }
 
     return (
-      <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+      <div className="bg-[#08080f] overflow-hidden relative size-full">
         <Starfield density={50} />
         <NebulaGlow color="purple" className="w-[350px] h-[350px] left-[20px] top-[150px]" />
         <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
-        <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
         <motion.button className="absolute left-[17px] top-[55px] cursor-pointer flex items-center gap-[8px] z-10" whileTap={{ scale: 0.95 }} onClick={() => setView('main')}>
           <p className="text-[20px]" style={{ color: planColor }}>←</p>
           <p className="font-bold text-[#f0e6cc] text-[20px]">AI Action Plan</p>
@@ -824,7 +823,6 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
           }
           <div className="h-[16px]" />
         </div>
-        <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
       </div>
     );
   }
@@ -1090,13 +1088,11 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
   // ── Mobile layout ──────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full">
+    <div className="bg-[#08080f] overflow-hidden relative size-full">
       <Starfield density={40} />
 
       {/* Status bar */}
       <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-      <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
 
       {/* Header */}
       <p className="absolute font-bold left-[17px] text-[#f0e6cc] text-[24px] top-[55px]">Your Sky</p>
@@ -1131,7 +1127,6 @@ export default function SkyScreen({ onNavigate, reflections, aiPlans, setAiPlans
         <NavIcon type="ai"      active={false} onClick={() => onNavigate('ai')}      />
         <NavIcon type="profile" active={false} onClick={() => onNavigate('profile')} />
       </div>
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
 
       {modals}
     </div>

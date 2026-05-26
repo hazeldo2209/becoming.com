@@ -4,14 +4,13 @@ import { Starfield } from './CosmicElements';
 export default function ConstellationDetailScreen({ constellation, onBack }: any) {
   return (
     <div
-      className="bg-[#08080f] relative rounded-[36px] size-full overflow-y-auto"
+      className="bg-[#08080f] relative size-full overflow-y-auto"
       style={{ scrollbarWidth: 'none' }}
     >
       <Starfield density={60} />
 
       {/* Status bar overlay — stays visually on top of content */}
       <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent pointer-events-none" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10 pointer-events-none">9:41</p>
 
       {/* ── Normal-flow content (creates scrollable height) ─────────────── */}
       <div className="relative z-[1] pt-[44px] pb-[40px]">
@@ -117,7 +116,6 @@ export default function ConstellationDetailScreen({ constellation, onBack }: any
       </div>
 
       {/* Home indicator */}
-      <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px]" />
     </div>
   );
 }

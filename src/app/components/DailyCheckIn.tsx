@@ -208,7 +208,7 @@ export default function DailyCheckIn({ onNavigate, setUserMood, setUserEnergy, i
   // ── Mobile layout ───────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full flex flex-col">
+    <div className="bg-[#08080f] overflow-hidden relative size-full flex flex-col">
       <Starfield density={40} />
 
       {/* Scrollable content */}

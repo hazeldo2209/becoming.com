@@ -197,10 +197,10 @@ function AppContent() {
   // ── Mobile layout ─────────────────────────────────────────────────────────
   return (
     <div
-      className="size-full flex items-center justify-center bg-[#08080f]"
+      className="size-full"
       data-theme={isDark ? 'dark' : 'light'}
     >
-      <div className="relative w-full max-w-[390px] h-[844px] overflow-hidden rounded-[36px]">
+      <div className="relative w-full h-full overflow-hidden">
         {phoneContent}
       </div>
     </div>

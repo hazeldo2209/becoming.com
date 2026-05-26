@@ -129,8 +129,6 @@ export default function SharedReflectionsScreen({ onNavigate, isDesktop }: any) 
       {!isDesktop && (
         <>
           <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#08080f] to-transparent" />
-          <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
-          <p className="absolute font-normal left-[317px] text-[#888888] text-[11px] top-[11px] z-10">▶ ▶▶ ▊▊</p>
         </>
       )}
 
@@ -194,7 +192,6 @@ export default function SharedReflectionsScreen({ onNavigate, isDesktop }: any) 
       </motion.div>
 
       {/* Home indicator */}
-      {!isDesktop && <div className="absolute bg-[#333333] h-[4px] left-[142px] rounded-[2px] bottom-[8px] w-[100px] z-10" />}
 
       {/* Modal */}
       <AnimatePresence>

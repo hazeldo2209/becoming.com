@@ -194,11 +194,10 @@ export default function EmotionalWeatherScreen({
   const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
-    <div className="bg-[#06060f] overflow-y-auto relative rounded-[36px] size-full" style={{ scrollbarWidth: 'none' }}>
+    <div className="bg-[#06060f] overflow-y-auto relative size-full" style={{ scrollbarWidth: 'none' }}>
 
       {/* Status bar */}
       <div className="absolute h-[44px] left-0 top-0 w-full z-10 bg-gradient-to-b from-[#06060f] to-transparent pointer-events-none" />
-      <p className="absolute font-bold left-[13px] text-[#f0e6cc] text-[13px] top-[10px] z-10">9:41</p>
 
       {/* Back */}
       <motion.button

@@ -350,7 +350,7 @@ export default function ResponseScreen({ onNavigate, setReflections, reflections
 
   // ── Mobile layout ──────────────────────────────────────────────────────────
   return (
-    <div className="bg-[#08080f] overflow-hidden relative rounded-[36px] size-full flex flex-col" style={{ scrollbarWidth: 'none' }}>
+    <div className="bg-[#08080f] overflow-hidden relative size-full flex flex-col" style={{ scrollbarWidth: 'none' }}>
       <Starfield density={25} />
 
       {/* Header bar */}

@@ -194,24 +194,23 @@ export default function LoginScreen({ onNavigate, initialMode, isDesktop }: any)
         >
           {/* ── Left panel — branding ──────────────────────────────────────── */}
           <div
-            className="relative flex-[0_0_42%] flex flex-col items-center justify-center px-10 py-12 overflow-hidden"
+            className="relative flex-[0_0_42%] flex items-center justify-center px-10 py-12 overflow-hidden"
             style={{ background: '#090910' }}
           >
-            {/* Ambient glow — centered behind the whole unit */}
+            {/* Ambient glow */}
             <NebulaGlow color="gold" className="w-[340px] h-[340px] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2" />
 
-            {/* Constellation + Logo as one centered unit */}
-            <div className="relative z-[1] flex flex-col items-center">
-              <div className="w-[200px] h-[200px]">
-                <ConstellationSVG className="w-full h-full" />
-              </div>
-              {/* Logo overlaps slightly with constellation bottom */}
-              <div className="-mt-3">
-                <BecomingLogo width="180px" />
-              </div>
+            {/* Constellation — decorative, floats in upper portion */}
+            <div className="absolute top-[8%] left-1/2 -translate-x-1/2 w-[220px] h-[220px] z-[1]">
+              <ConstellationSVG className="w-full h-full" />
             </div>
 
-            {/* Tagline pinned to bottom of panel */}
+            {/* Logo — truly centered in the panel */}
+            <div className="relative z-[2]">
+              <BecomingLogo width="180px" />
+            </div>
+
+            {/* Tagline pinned to bottom */}
             <div className="absolute bottom-8 flex flex-col items-center gap-1 z-[1]">
               <p className="text-[10px] font-bold tracking-[0.18em] text-[#444455] uppercase">
                 IF TOMORROW ENDS

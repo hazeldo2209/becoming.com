@@ -153,14 +153,14 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
     );
   }
 
-  // ── Mobile layout — absolute positioning with vh units, mirrors desktop approach ──
+  // ── Mobile layout ──────────────────────────────────────────────────────────
   return (
     <div className="bg-[#08080f] overflow-hidden relative size-full">
       {/* Background */}
       <Starfield density={80} />
       <NebulaGlow color="gold" className="w-[300px] h-[300px] left-1/2 -translate-x-1/2 top-[8vh]" />
 
-      {/* Eyebrow */}
+      {/* Eyebrow — fixed near top */}
       <motion.p
         className="absolute left-1/2 -translate-x-1/2 font-bold text-[#888888] text-[11px] tracking-[0.15em] whitespace-nowrap z-[1]"
         style={{ top: vh(12) }}
@@ -170,54 +170,64 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
         IF TOMORROW ENDS
       </motion.p>
 
-      {/* Constellation — large, fills upper half */}
+      {/* Constellation — upper 55% of screen */}
       <div className="absolute left-0 right-0 z-[1]" style={{ top: vh(3), height: vh(55) }}>
         <ConstellationSVG className="w-full h-full" />
       </div>
 
-      {/* BECOMING logo — sits just below constellation */}
-      <motion.div
-        className="absolute left-1/2 -translate-x-1/2 z-[1]"
-        style={{ top: vh(57) }}
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.6, duration: 0.8 }}
+      {/* ── Bottom panel: logo → tagline → [flex gap] → button → sign-in ──
+           Starts just below constellation, ends at screen bottom.
+           Flex column ensures elements never overlap regardless of screen size. */}
+      <div
+        className="absolute left-0 right-0 bottom-0 z-[1] flex flex-col items-center px-6 overflow-hidden"
+        style={{ top: vh(56) }}
       >
-        <BecomingLogo />
-      </motion.div>
+        {/* Logo */}
+        <motion.div
+          className="shrink-0"
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.6, duration: 0.8 }}
+        >
+          <BecomingLogo />
+        </motion.div>
 
-      {/* Tagline — generous gap below logo */}
-      <motion.p
-        className="absolute left-1/2 -translate-x-1/2 text-[15px] italic text-[#888888] text-center z-[1]"
-        style={{ top: vh(76), width: 'min(280px, 80vw)' }}
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 0.8 }}
-      >
-        what would you regret not doing today?
-      </motion.p>
+        {/* Tagline */}
+        <motion.p
+          className="shrink-0 text-[14px] italic text-[#888888] text-center mt-3"
+          style={{ maxWidth: 'min(280px, 80vw)' }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 0.8 }}
+        >
+          what would you regret not doing today?
+        </motion.p>
 
-      {/* CTA button */}
-      <motion.button
-        className="absolute left-1/2 -translate-x-1/2 bg-[#d4af78] h-[54px] rounded-[27px] cursor-pointer z-[1]"
-        style={{ bottom: vh(11), width: 'min(320px, calc(100vw - 48px))', boxShadow: '0 0 24px rgba(212,175,120,0.3)' }}
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.4, duration: 0.7 }}
-        whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212,175,120,0.5)' }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => onNavigate('signup')}
-      >
-        <p className="font-bold text-[#08080f] text-[16px]">Begin Becoming</p>
-      </motion.button>
+        {/* Elastic spacer — pushes buttons to bottom */}
+        <div className="flex-1" style={{ minHeight: 12 }} />
 
-      {/* Sign in link */}
-      <motion.button
-        className="absolute left-1/2 -translate-x-1/2 cursor-pointer font-normal text-[#9898a8] text-[13px] whitespace-nowrap z-[1]"
-        style={{ bottom: vh(5) }}
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: 2.8, duration: 0.8 }}
-        onClick={() => onNavigate('login')}
-      >
-        Already have an account?{' '}<span className="text-[#d4af78]">Sign in →</span>
-      </motion.button>
+        {/* CTA button */}
+        <motion.button
+          className="shrink-0 bg-[#d4af78] h-[54px] rounded-[27px] cursor-pointer w-full"
+          style={{ maxWidth: 'min(320px, calc(100vw - 48px))', boxShadow: '0 0 24px rgba(212,175,120,0.3)' }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.4, duration: 0.7 }}
+          whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212,175,120,0.5)' }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onNavigate('signup')}
+        >
+          <p className="font-bold text-[#08080f] text-[16px]">Begin Becoming</p>
+        </motion.button>
+
+        {/* Sign in link */}
+        <motion.button
+          className="shrink-0 cursor-pointer font-normal text-[#9898a8] text-[13px] whitespace-nowrap mt-3"
+          style={{ marginBottom: vh(4) }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ delay: 2.8, duration: 0.8 }}
+          onClick={() => onNavigate('login')}
+        >
+          Already have an account?{' '}<span className="text-[#d4af78]">Sign in →</span>
+        </motion.button>
+      </div>
     </div>
   );
 }

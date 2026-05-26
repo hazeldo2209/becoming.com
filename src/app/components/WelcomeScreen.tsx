@@ -4,6 +4,13 @@ import { Starfield, NebulaGlow } from './CosmicElements';
 import svgPaths from '../../imports/svg-enakyo375k';
 
 // Shared SVG constellation paths component
+// Safari-safe style for SVG path transforms
+const starStyle = (extra?: string) => ({
+  transformBox: 'fill-box' as const,
+  transformOrigin: 'center' as const,
+  filter: extra ?? 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))',
+});
+
 function ConstellationSVG({ className }: { className: string }) {
   return (
     <motion.svg
@@ -11,35 +18,37 @@ function ConstellationSVG({ className }: { className: string }) {
       width="100%"
       height="100%"
       viewBox="0 0 572 513"
+      preserveAspectRatio="xMidYMid meet"
       fill="none"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 0.8, duration: 1.5 }}
+      transition={{ delay: 0.4, duration: 1.2 }}
     >
+      {/* Connecting dotted line — fade in (pathLength conflicts with strokeDasharray in Safari) */}
       <motion.path
         d={svgPaths.p128b0880}
         stroke="#D4AF78"
         strokeWidth="0.583333"
         strokeDasharray="0.58 0.58"
         fill="none"
-        opacity="0.4"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ delay: 1, duration: 2, ease: "easeInOut" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.4 }}
+        transition={{ delay: 0.8, duration: 1.5, ease: 'easeInOut' }}
       />
-      <motion.path d={svgPaths.p1268030} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.1, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.pc875900} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.2, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p3378f330} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.3, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p2167db00} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.4, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.pb2ea300} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.5, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p22eb9400} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.6, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p2ef4dc00} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.7, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p1581b300} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.8, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.pab1e800} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.9, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p3e010000} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.0, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.pee1c000} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.1, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p652bc00} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.2, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
-      <motion.path d={svgPaths.p1c019680} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.3, duration: 0.4 }} style={{ filter: 'drop-shadow(0 0 4px rgba(212, 175, 120, 0.8))' }} />
+      {/* Star dots — scale from center using transformBox: fill-box for Safari */}
+      <motion.path d={svgPaths.p1268030} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.9,  duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.pc875900} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.0,  duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p3378f330} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.1, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p2167db00} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.2, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.pb2ea300}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.3, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p22eb9400} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.4, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p2ef4dc00} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.5, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p1581b300} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.6, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.pab1e800}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.7, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p3e010000} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.8, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.pee1c000}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1.9, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p652bc00}  fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.0, duration: 0.4 }} style={starStyle()} />
+      <motion.path d={svgPaths.p1c019680} fill="#D4AF78" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 2.1, duration: 0.4 }} style={starStyle()} />
     </motion.svg>
   );
 }

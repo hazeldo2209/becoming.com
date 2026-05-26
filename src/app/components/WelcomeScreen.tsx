@@ -86,6 +86,7 @@ function BecomingLogo() {
         width: 'min(220px, 55vw)',
         height: 'auto',
         display: 'block',
+        overflow: 'visible',
         filter: 'drop-shadow(0 0 20px rgba(240, 230, 204, 0.5)) drop-shadow(0 0 40px rgba(240, 230, 204, 0.3))'
       }}
     >
@@ -179,12 +180,12 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
            Starts just below constellation, ends at screen bottom.
            Flex column ensures elements never overlap regardless of screen size. */}
       <div
-        className="absolute left-0 right-0 bottom-0 z-[1] flex flex-col items-center px-6 overflow-hidden"
+        className="absolute left-0 right-0 bottom-0 z-[1] flex flex-col items-center px-6"
         style={{ top: vh(56) }}
       >
-        {/* Logo */}
+        {/* Logo — padding-top gives glow room above the panel edge */}
         <motion.div
-          className="shrink-0"
+          className="shrink-0 pt-2"
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.6, duration: 0.8 }}
         >

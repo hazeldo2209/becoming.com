@@ -79,12 +79,13 @@ function ConstellationSVG({ className }: { className: string }) {
 function BecomingLogo() {
   return (
     <svg
-      width="200"
-      height="129"
       viewBox="0 0 488 314"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{
+        width: 'min(220px, 55vw)',
+        height: 'auto',
+        display: 'block',
         filter: 'drop-shadow(0 0 20px rgba(240, 230, 204, 0.5)) drop-shadow(0 0 40px rgba(240, 230, 204, 0.3))'
       }}
     >

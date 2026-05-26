@@ -116,24 +116,27 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
           IF TOMORROW ENDS
         </motion.p>
 
-        <ConstellationSVG className="absolute left-1/2 -translate-x-1/2 top-[-58px]" />
+        {/* Constellation — constrained so it doesn't spill over the logo */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[-30px] w-[480px] h-[480px] z-[1]">
+          <ConstellationSVG className="w-full h-full" />
+        </div>
 
         <motion.div
-          className="absolute left-1/2 -translate-x-1/2 top-[439px]"
+          className="absolute left-1/2 -translate-x-1/2 top-[390px] z-[2]"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 1 }}
         >
           <BecomingLogo />
         </motion.div>
 
         <motion.p
-          className="absolute left-1/2 -translate-x-1/2 top-[594px] text-[14px] italic text-[#888888] text-center w-[300px]"
+          className="absolute left-1/2 -translate-x-1/2 top-[550px] text-[14px] italic text-[#888888] text-center w-[300px] z-[2]"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5, duration: 1 }}
         >
           what would you regret not doing today?
         </motion.p>
 
         <motion.button
-          className="absolute left-1/2 -translate-x-1/2 top-[650px] bg-[#d4af78] h-[54px] w-[280px] rounded-[27px] cursor-pointer"
+          className="absolute left-1/2 -translate-x-1/2 top-[606px] bg-[#d4af78] h-[54px] w-[280px] rounded-[27px] cursor-pointer z-[2]"
           style={{ boxShadow: '0 0 24px rgba(212, 175, 120, 0.3)' }}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3, duration: 0.8 }}
           whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212, 175, 120, 0.5)' }}
@@ -144,7 +147,7 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
         </motion.button>
 
         <motion.button
-          className="absolute left-1/2 -translate-x-1/2 top-[727px] cursor-pointer whitespace-nowrap font-normal text-[#9898a8] text-[12px]"
+          className="absolute left-1/2 -translate-x-1/2 top-[683px] cursor-pointer whitespace-nowrap font-normal text-[#9898a8] text-[12px] z-[2]"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3.5, duration: 1 }}
           onClick={() => onNavigate('login')}
         >

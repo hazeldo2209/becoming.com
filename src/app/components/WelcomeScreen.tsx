@@ -133,15 +133,15 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
         IF TOMORROW ENDS
       </motion.p>
 
-      {/* Constellation — upper third of screen */}
-      <div className="absolute left-0 right-0 z-[1]" style={{ top: '5vh', height: '38vh' }}>
+      {/* Constellation — large, fills upper half */}
+      <div className="absolute left-0 right-0 z-[1]" style={{ top: '3vh', height: '55vh' }}>
         <ConstellationSVG className="w-full h-full" />
       </div>
 
       {/* BECOMING logo — sits just below constellation */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 z-[1]"
-        style={{ top: '44vh' }}
+        style={{ top: '57vh' }}
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.6, duration: 0.8 }}
       >
@@ -151,7 +151,7 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
       {/* Tagline — generous gap below logo */}
       <motion.p
         className="absolute left-1/2 -translate-x-1/2 text-[15px] italic text-[#888888] text-center z-[1]"
-        style={{ top: '71vh', width: 'min(280px, 80vw)' }}
+        style={{ top: '76vh', width: 'min(280px, 80vw)' }}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 0.8 }}
       >

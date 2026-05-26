@@ -1,12 +1,14 @@
+import React from 'react';
 import { motion } from 'motion/react';
 import { Starfield, NebulaGlow } from './CosmicElements';
 import svgPaths from '../../imports/svg-enakyo375k';
 
 // Shared SVG constellation paths component
-function ConstellationSVG({ className }: { className: string }) {
+function ConstellationSVG({ className, style }: { className: string; style?: React.CSSProperties }) {
   return (
     <motion.svg
       className={className}
+      style={style}
       width="572"
       height="513"
       viewBox="0 0 572 513"
@@ -117,47 +119,54 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
 
   // ── Mobile layout ──────────────────────────────────────────────────────────
   return (
-    <div className="bg-[#08080f] overflow-hidden relative size-full flex flex-col">
+    <div className="bg-[#08080f] overflow-hidden relative size-full">
+      {/* Background */}
       <Starfield density={80} />
-      <NebulaGlow color="gold" className="w-[300px] h-[300px] left-[45px] top-[120px]" />
+      <NebulaGlow color="gold" className="w-[300px] h-[300px] left-1/2 -translate-x-1/2 top-[10%]" />
 
-      {/* Constellation — decorative background, clipped at top */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <ConstellationSVG className="absolute left-[-90px] top-[-58px]" />
-      </div>
-
-      {/* Scrollable content */}
-      <div className="relative z-[1] flex-1 overflow-y-auto flex flex-col items-center px-[24px] pt-[120px] pb-[32px] gap-[0px]">
-
-        {/* IF TOMORROW ENDS */}
+      {/* ── Upper area: eyebrow + constellation (top 52% of screen) ── */}
+      <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '52%' }}>
+        {/* "IF TOMORROW ENDS" */}
         <motion.p
-          className="font-bold text-[#888888] text-[11px] tracking-[0.15em] mb-[16px]"
+          className="absolute left-1/2 -translate-x-1/2 font-bold text-[#888888] text-[11px] tracking-[0.15em] whitespace-nowrap"
+          style={{ top: '18%' }}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 1 }}
         >
           IF TOMORROW ENDS
         </motion.p>
 
+        {/* Constellation SVG — centered, scaled to fit */}
+        <ConstellationSVG className="absolute left-1/2 -translate-x-1/2 top-[-4%]" style={{ width: '100%', maxWidth: 420, height: 'auto' }} />
+      </div>
+
+      {/* ── Lower area: logo + tagline + buttons (bottom 48%) ── */}
+      <div
+        className="absolute left-0 right-0 bottom-0 flex flex-col items-center px-[24px] pb-[48px] gap-[12px]"
+        style={{ top: '50%' }}
+      >
         {/* BECOMING logo */}
         <motion.div
-          className="mb-[16px]"
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 1 }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2, duration: 1 }}
         >
           <BecomingLogo />
         </motion.div>
 
         {/* Tagline */}
         <motion.p
-          className="text-[14px] italic text-[#888888] text-center w-[280px] mb-[32px]"
+          className="text-[14px] italic text-[#888888] text-center"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5, duration: 1 }}
         >
           what would you regret not doing today?
         </motion.p>
 
+        {/* Spacer pushes buttons to the bottom */}
+        <div className="flex-1" />
+
         {/* CTA button */}
         <motion.button
-          className="bg-[#d4af78] h-[54px] w-full max-w-[280px] rounded-[27px] cursor-pointer mb-[16px]"
+          className="bg-[#d4af78] h-[54px] w-full max-w-[320px] rounded-[27px] cursor-pointer"
           style={{ boxShadow: '0 0 24px rgba(212, 175, 120, 0.3)' }}
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3, duration: 0.8 }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3, duration: 0.8 }}
           whileHover={{ scale: 1.02, boxShadow: '0 0 32px rgba(212, 175, 120, 0.5)' }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onNavigate('signup')}
@@ -165,19 +174,14 @@ export default function WelcomeScreen({ onNavigate, isDesktop }: any) {
           <p className="font-bold text-[#08080f] text-[16px]">Begin Becoming</p>
         </motion.button>
 
-        {/* Already have an account link */}
+        {/* Sign in link */}
         <motion.button
-          className="cursor-pointer whitespace-nowrap font-normal text-[#9898a8] text-[12px]"
+          className="cursor-pointer whitespace-nowrap font-normal text-[#9898a8] text-[13px]"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3.5, duration: 1 }}
           onClick={() => onNavigate('login')}
         >
-          Already have an account?{' '}<span className="text-[#888888]">Sign in →</span>
+          Already have an account?{' '}<span className="text-[#d4af78]">Sign in →</span>
         </motion.button>
-      </div>
-
-      {/* Home indicator */}
-      <div className="shrink-0 h-[24px] flex items-center justify-center">
-        <div className="bg-[#333333] h-[4px] rounded-[2px] w-[100px]" />
       </div>
     </div>
   );
